@@ -70,7 +70,9 @@ def call_exposures(kanton=None, age_group=None, epsg_output=4326, save_exposures
         pop_tot_canton = {}
 
     under_over = {'u75': population_u, 'o75': population_o}
+    
     for name in exposures_name:
+        
         # get tot. population (CH/Canton)
         pop_values[name] = population_loc[under_over[name]['GIS_Data_code']]
         pop_hectare_ch[name] = pop_values[name].sum(axis=1)  # to sum over the columns

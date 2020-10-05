@@ -46,12 +46,12 @@ def calculate_impact_mortality(directory_hazard, scenario, year, exposures, unce
     for key, grid in exposures.items():  # calculate impact for each type of exposure
         impact = Impact()
         
-        calc_mortality(impact, key, grid, if_hw_set, hazard, kanton=kanton, save_mat=save_median_mat)
+        impact = calc_mortality(impact, key, grid, if_hw_set, hazard, kanton=kanton, save_mat=save_median_mat)
 
-        impact_dict[key] = np.sum(impact.at_event)
+        impact_dict[key] = np.sum(impact.imp_mat)
 
         if save_median_mat:
-            matrices[key] = csr_matrix(impact.imp_mat.sum(axis=0))
+            matrices[key] = csr_matrix(impact.imp_mat)
         # sum all events to get one 1xgridpoints matrix per type of exposures
 
     del hazard
@@ -158,6 +158,7 @@ def calc_mortality(impact, key, exposures, impact_funcs, hazard, kanton, save_ma
     if save_mat:
         impact.imp_mat = impact.imp_mat.tocsr()
 
+    return impact
 
 ###############################################################################
 
@@ -208,19 +209,8 @@ def exp_impact_mortality(impact, exp_iimp, exposures, key, hazard, imp_fun, insu
     # Compute impact matrix
     matrix = impact_mortality(temperature_matrix, exposure_values, icens, expected_deaths, imp_fun, fract.shape)
 
-    if insure_flag and matrix.nonzero()[0].size:
-        inten_val = hazard.intensity[:, icens].todense()
-        paa = np.interp(inten_val, imp_fun.intensity, imp_fun.paa)
-        matrix = np.minimum(np.maximum(matrix - \
-                                       exposures.deductible.values[exp_iimp] * paa, 0), \
-                            exposures.cover.values[exp_iimp])
-        impact.eai_exp[exp_iimp] += np.sum(np.asarray(matrix) * \
-                                           hazard.frequency.reshape(-1, 1), axis=0)
-    else:
-        impact.eai_exp[exp_iimp] += np.squeeze(np.asarray(np.sum( \
-            matrix.multiply(hazard.frequency.reshape(-1, 1)), axis=0)))
+    impact.eai_exp[exp_iimp] = matrix
 
-    impact.at_event += np.squeeze(np.asarray(np.sum(matrix, axis=1)))
     impact.tot_value += np.sum(exposures.value.values[exp_iimp])
     if not isinstance(impact.imp_mat, list):
         impact.imp_mat[:, exp_iimp] = matrix
@@ -228,51 +218,18 @@ def exp_impact_mortality(impact, exp_iimp, exposures, key, hazard, imp_fun, insu
 
 ###############################################################################
 
-def impact_mortality(temperature_matrix, exposure_values, indices_of_centroids, expected_deaths, imp_fun, shape):
+# Vectorized solution
 
-    mat = csr_matrix(shape)
-    num_of_days = shape[0]
-    num_of_cells = shape[1]
+def impact_mortality(temperature_matrix, exposure_values, icens, expected_deaths, imp_fun, shape):
 
-    # print('CELLS: ', num_of_cells)
-    # print('DAYS: ', num_of_days)
+    temperature_array = temperature_matrix.astype(int).toarray()
+    temperatures = np.unique(temperature_array)
+    temperatures = temperatures[temperatures>21]
+    occurence = np.apply_along_axis(np.bincount, axis=0, arr=temperature_array, minlength=np.max(temperature_array) +1)
+    occurence = {t: occurence[t] for t in range(22, len(occurence))}
+    average_death = np.sum(np.multiply(exposure_values, expected_deaths[i]) for i in expected_deaths)
+    value = {t: np.multiply(exposure_values, imp_fun.calc_mdr(t) - 1) for t in temperatures}
+    af = {t: np.divide(value[t], value[t]+1) for t in temperatures}
+    total_attributable_deaths = np.sum(af[t]*occurence[t]*average_death for t in temperatures)
 
-    for cell in range(num_of_cells):
-        temperature_occurrence_index = 0
-        attributable_fraction_index = 1
-
-        # 1: Create histogram
-        histogram = {}
-
-        for day in range(num_of_days):
-            temperature_value = int(round(temperature_matrix[day, cell]))
-            if temperature_value > 21.5:
-                if temperature_value in histogram:
-                    histogram[temperature_value][temperature_occurrence_index] += 1
-                else:
-                    histogram[temperature_value] = [0, 0]
-                    histogram[temperature_value][temperature_occurrence_index] = 1
-
-        # 2: Aggregate expected deaths according to cell histogram:
-        average_deaths = 0
-        for key in histogram.keys():
-            average_deaths += expected_deaths[key] * exposure_values[cell]
-        #print(average_deaths)
-
-        # 3: Attributable Fraction:
-        for key in histogram.keys():
-            value = exposure_values[cell] * (imp_fun.calc_mdr(key) - 1)
-            histogram[key][attributable_fraction_index] = value / (value + 1)
-
-        # 4: Attributable Deaths:
-        total_attributable_deaths = 0
-        for key in histogram.keys():
-            days_amount = histogram[key][temperature_occurrence_index]
-            attributable_fraction = histogram[key][attributable_fraction_index]
-            total_attributable_deaths += days_amount * attributable_fraction * average_deaths
-        #print(total_attributable_deaths)
-
-        # Store the proper information in the first day only (since we already aggregated per each day)
-        mat[0, cell] = total_attributable_deaths
-
-    return mat
+    return total_attributable_deaths

@@ -34,8 +34,8 @@ save_median_mat = True
 
 # in this base model run, all uncertainties are taken into account.
 # This is not the case in the sensibility testing code where all are taken one by one.
-uncertainty_variables_list = ['all']
-uncertainty = 'all_uncertainties'
+uncertainty_variables_list = ['None']
+uncertainty = 'none'
 
 for kanton in kantons:  # loop through given kantons, one file per element in the kantons loop will be produced.
     # If cantons only contains None, only one file corresponding to all of Switzerland is produced,

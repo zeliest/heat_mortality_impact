@@ -39,8 +39,8 @@ def impact_monte_carlo(directory_hazard, scenarios, years_list, n_mc, uncertaint
         exposures = {}
         exposures['u75'] = Exposures()
         exposures['o75'] = Exposures()
-        exposures['u75'].read_hdf5('input_data/exposures/exposures_mortality_zurich_u75.h5')
-        exposures['o75'].read_hdf5('input_data/exposures/exposures_mortality_zurich_o75.h5')
+        exposures['u75'].read_hdf5('../../input_data/exposures/exposures_mortality_zurich_u75.h5')
+        exposures['o75'].read_hdf5('../../input_data/exposures/exposures_mortality_zurich_o75.h5')
     else:
         exposures = call_exposures(kanton=kanton, age_group=age_group, save_exposures=True)
     print('\n Ended Exposures generator \n')

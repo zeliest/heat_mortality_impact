@@ -1,6 +1,7 @@
 import pickle
 from ast import literal_eval
 import sys
+sys.path.append('../../')
 
 from src.impact_calculation.impact_monte_carlo_parallel import impact_monte_carlo
 

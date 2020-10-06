@@ -183,7 +183,7 @@ def exp_impact_mortality(impact, exp_iimp, exposures, key, hazard, imp_fun, insu
     else:
         kanton_name = kanton
     
-    directory = 'input_data/impact_functions/'
+    directory = '../../input_data/impact_functions/'
     
     annual_deaths = pd.read_excel(''.join([directory, 'annual_deaths.xlsx']), sheet_name = key)
     # file containing the number of annual deaths per CH / Canton for each age category

@@ -1,16 +1,15 @@
 import pickle
-from ast import literal_eval
+import sys
+sys.path.append('../../')
 from src.impact_calculation.impact_monte_carlo_parallel import impact_monte_carlo
-import os
-os.chdir('../')
 
 def convert(string):  # function that converts 'lists' from the bash input (strings) to python lists
     li = list(string.split(","))
     return li
 
 
-directory_output = 'output/impact_ch/'  # where to save to output
-directory_hazard = 'input_data/ch2018_sample/' # test data
+directory_output = '../../output/impact_ch/'  # where to save to output
+directory_hazard = '../../input_data/ch2018_sample/' # test data
 
 n_mc = 1
 

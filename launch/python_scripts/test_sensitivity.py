@@ -6,11 +6,8 @@ import ast
 
 import sys
 
-sys.path.append('../../src/impact_calculation')
-sys.path.append('../../src/write_entities')
-sys.path.append('../../src/util/')
 
-from impact_monte_carlo_parallel import impact_monte_carlo
+from src.impact_calculation.impact_monte_carlo_parallel import impact_monte_carlo
 
 
 def convert(string):

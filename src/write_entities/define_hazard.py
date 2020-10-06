@@ -44,7 +44,7 @@ def call_hazard(directory_hazard, scenario, year, uncertainty_variable='all', ka
                                                          ''.join([str(year + 1 + ny), '-01-01'])))  # open as xr dataset
 
     if kanton:  # if a canton is specified, we mask the values outside of this canton using a day_startapefile
-        shp_dir = 'input_data/shapefiles/KANTONS_projected_epsg4326/' \
+        shp_dir = '../../input_data/shapefiles/KANTONS_projected_epsg4326/' \
                   'swissBOUNDARIES3D_1_3_TLM_KANTONSGEBIET_epsg4326.shp'
 
         tasmax = add_shape_coord_from_data_array(tasmax, shp_dir, kanton)

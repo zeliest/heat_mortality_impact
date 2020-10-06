@@ -61,7 +61,7 @@ def call_impact_functions(with_without_error=True):
                               """
 
     # get the data from the Excel files:
-    directory_if = 'input_data/impact_functions/'
+    directory_if = '../../input_data/impact_functions/'
 
     file_under75 = pd.read_csv(''.join([directory_if, 'impact_under75.csv']))
     function_under75 = impact_functions_random(file_under75, 'under75', with_without_error)

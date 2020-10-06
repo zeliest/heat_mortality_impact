@@ -22,7 +22,7 @@ def call_exposures(kanton=None, age_group=None, epsg_output=4326, save_exposures
                         Dictionary containing one Exposure per age category (ratio of pop. per hectare instead of the number of people)
                           """
 
-    directory = 'input_data/exposures/'
+    directory = '../../input_data/exposures/'
     exposures = {}  # dictionary of the exposures, where we will further put each category of Exposure as a key
     
     population_info = pd.read_csv(
@@ -79,7 +79,7 @@ def call_exposures(kanton=None, age_group=None, epsg_output=4326, save_exposures
         pop_tot_ch[name] = pop_hectare_ch[name].sum(axis=0)  # to sum over the rows
 
         if kanton:
-            shp_dir = 'input_data/shapefiles/KANTONS_projected_epsg4326/' \
+            shp_dir = '../../input_data/shapefiles/KANTONS_projected_epsg4326/' \
                       'swissBOUNDARIES3D_1_3_TLM_KANTONSGEBIET_epsg4326.shp'
 
             pop_loc_ch = population_loc.copy()
@@ -113,7 +113,7 @@ def call_exposures(kanton=None, age_group=None, epsg_output=4326, save_exposures
 
         if kanton:  # test if a canton was specified, in that case
             # we first get a panda geodataframe and define the exposures slightly differently
-            shp_dir = 'input_data/shapefiles/KANTONS_projected_epsg4326/' \
+            shp_dir = '../../input_data/shapefiles/KANTONS_projected_epsg4326/' \
                       'swissBOUNDARIES3D_1_3_TLM_KANTONSGEBIET_epsg4326.shp'
 
             population_sum_intensity = vector_shapefile_mask(population_sum_intensity, shp_dir, kanton, epsg_data,
@@ -142,6 +142,6 @@ def call_exposures(kanton=None, age_group=None, epsg_output=4326, save_exposures
         
         exposures[name] = population_sum_intensity
         if save_exposures:
-            exposures[name].write_hdf5(''.join(['input_data/exposures/exposures_mortality_', kanton, '_', name, '.h5']))
+            exposures[name].write_hdf5(''.join(['../../input_data/exposures/exposures_mortality_', kanton, '_', name, '.h5']))
 
     return exposures

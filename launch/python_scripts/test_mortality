@@ -30,7 +30,7 @@ age_group = None
 groups_str = 'all_age_groups' # string to name the file later on
 
 # determine if the median damage matrix should be saved as output
-save_median_mat = True
+save_median_mat = False
 
 # in this base model run, all uncertainties are taken into account.
 # This is not the case in the sensibility testing code where all are taken one by one.

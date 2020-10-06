@@ -30,11 +30,9 @@ def call_hazard(directory_hazard, scenario, year, uncertainty_variable='all', ka
                 hazards(dict): dictionary containing the hazard heat
                   """
     if uncertainty_variable == 'all' or uncertainty_variable == 'years':
-        nyears = 7
         ny = random.randint(-3, 3)  # to be added to the year, so that any year in the +5 to -5 range can be picked
     else:  # if we are testing the sensitivity to the change in variables, we always want to be taking
         # the same year and therefore add 0
-        nyears = 1
         ny = 0
 
     if uncertainty_variable == 'simulations' or uncertainty_variable == 'all':
@@ -91,7 +89,7 @@ def call_hazard(directory_hazard, scenario, year, uncertainty_variable='all', ka
     heat.intensity = sparse.csr_matrix(heat_data.reshape(nevents, nlons * nlats))
     heat.event_id = np.array(events)
     heat.event_name = heat.event_id
-    heat.frequency = np.ones(nevents)/(2*nyears+1)
+    heat.frequency = np.ones(nevents)
     heat.fraction = heat.intensity.copy()
     heat.fraction.data.fill(1)
     heat.date = event_dates

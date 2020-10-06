@@ -10,7 +10,7 @@ from src.util.shapefile_masks import vector_shapefile_mask
 
 # In[ ]:
 
-def call_exposures(kanton=None, age_group=None, epsg_output=4326, save_exposures = False):
+def call_exposures(kanton=None, age_group=None, epsg_output=4326, save_exposures=False):
     """write the Exposures:
 
                     Parameters:
@@ -142,6 +142,8 @@ def call_exposures(kanton=None, age_group=None, epsg_output=4326, save_exposures
         
         exposures[name] = population_sum_intensity
         if save_exposures:
+            if kanton is None:
+                kanton = 'CH'
             exposures[name].write_hdf5(''.join(['../../input_data/exposures/exposures_mortality_', kanton, '_', name, '.h5']))
 
     return exposures

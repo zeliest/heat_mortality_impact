@@ -100,7 +100,6 @@ def impact_monte_carlo(directory_hazard, scenarios, years_list, n_mc, kanton=Non
         if save_median_mat:
             matrices_scenario[scenario] = matrices_year
 
-
     if not save_median_mat:
         return [impact_scenario]  # return only the total loss for each category
     else:

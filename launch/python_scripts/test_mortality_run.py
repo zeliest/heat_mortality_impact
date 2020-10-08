@@ -17,7 +17,7 @@ n_mc = 1
 
 # check the third input, which determines if the input should be calculated for Switzerland,
 # all cantons indepentently or for one specific canton:
-kantons = [None]  # the None is put into a list, as we further loop through the cantons given
+kantons = ['Zürich']  # the None is put into a list, as we further loop through the cantons given
 
 # get fourth input, the years for which to compute the impact
 years_list = [2020]

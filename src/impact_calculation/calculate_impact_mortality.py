@@ -203,7 +203,7 @@ def exp_impact_mortality(impact, exp_iimp, exposures, key, hazard, imp_fun, insu
     #print(expected_deaths)
 
     # Compute impact matrix
-    matrix = impact_mortality(temperature_matrix, exposure_values, icens, expected_deaths, imp_fun, fract.shape)
+    matrix = impact_mortality(temperature_matrix, exposure_values, expected_deaths, imp_fun)
 
 
     impact.eai_exp[exp_iimp] = matrix
@@ -217,16 +217,15 @@ def exp_impact_mortality(impact, exp_iimp, exposures, key, hazard, imp_fun, insu
 
 # Vectorized solution
 
-def impact_mortality(temperature_matrix, exposure_values, icens, expected_deaths, imp_fun, shape):
+
+def impact_mortality(temperature_matrix, exposure_values, expected_deaths, imp_fun):
 
     temperature_array = temperature_matrix.astype(int).toarray()
     temperatures = np.unique(temperature_array)
     temperatures = temperatures[temperatures>21]
     occurence = np.apply_along_axis(np.bincount, axis=0, arr=temperature_array, minlength=np.max(temperature_array) +1)
-    occurence = {t: occurence[t] for t in range(22, len(occurence))}
     average_death = np.sum(np.multiply(exposure_values, expected_deaths[i]) for i in expected_deaths)
     value = {t: np.multiply(exposure_values, imp_fun.calc_mdr(t) - 1) for t in temperatures}
-    af = {t: np.divide(value[t], value[t]+1) for t in temperatures}
-    total_attributable_deaths = np.sum(af[t]*occurence[t]*average_death for t in temperatures)
+    total_attributable_deaths = np.sum(np.divide(value[t], value[t]+1)*occurence[t]*average_death for t in temperatures)
 
     return total_attributable_deaths

@@ -28,7 +28,7 @@ def impact_monte_carlo(directory_hazard, scenarios, years_list, n_mc, kanton=Non
 
     # the exposures are called outside the loop as their is no uncertainty in this entitiy.
     print('\n Starting Exposures generator \n')
-    if kanton == 'Zürich':
+    if kanton == 'Zürich' or kanton == None:
         str_kanton = {None: 'ch', 'Zürich': 'zurich'}
         exposures = {}
         for under_over in ['u75', 'o75']:

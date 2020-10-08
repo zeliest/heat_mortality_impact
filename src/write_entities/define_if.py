@@ -13,7 +13,7 @@ def polynomial(x, a, b, c, d):
 
 
 # function to get a random impact function:
-def impact_functions_random(file, category, error=True):
+def impact_functions_random(file):
     """get curve for the impact function:
 
                        Parameters:
@@ -29,14 +29,10 @@ def impact_functions_random(file, category, error=True):
     #data = data.dropna()  # get rid of missing values
     xdata = data['T']
 
-    if error:
-        #ydata = np.random.uniform(low=data['95CI_low'], high=data['95CI_high'])
-        #ydata = np.clip(np.random.normal(loc=data['best_estimate'], scale=1), data['95CI_low'], data['95CI_high'])
-        ydata = truncated_normal(data['best_estimate'], (data['95CI_high']-data['95CI_low']/3.92), data['95CI_low'], data['95CI_high'])
-    
-    else:
-        ydata = data['best_estimate']
-        
+    #ydata = np.random.uniform(low=data['95CI_low'], high=data['95CI_high'])
+    #ydata = np.clip(np.random.normal(loc=data['best_estimate'], scale=1), data['95CI_low'], data['95CI_high'])
+    ydata = truncated_normal(data['best_estimate'], (data['95CI_high']-data['95CI_low']/3.92), data['95CI_low'], data['95CI_high'])
+
     # set RR=1 up to T=22°C:
     ydata = np.append(ydata, [1, 1])
     xdata = np.append(xdata, [21, 22])
@@ -64,10 +60,10 @@ def call_impact_functions(with_without_error=True):
     directory_if = '../../input_data/impact_functions/'
 
     file_under75 = pd.read_csv(''.join([directory_if, 'impact_under75.csv']))
-    function_under75 = impact_functions_random(file_under75, 'under75', with_without_error)
+    function_under75 = impact_functions_random(file_under75)
 
     file_over75 = pd.read_csv(''.join([directory_if, 'impact_over75.csv']))
-    function_over75 = impact_functions_random(file_over75, 'over75', with_without_error)
+    function_over75 = impact_functions_random(file_over75)
 
     # make impact function set:
 

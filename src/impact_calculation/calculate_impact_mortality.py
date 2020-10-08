@@ -18,7 +18,7 @@ from climada.util.config import CONFIG
 
 # This function calls a random hazard and impact function and take the given exposures to calculate an impact.
 
-def calculate_impact_mortality(directory_hazard, scenario, year, exposures, uncertainty_variable='all',
+def calculate_impact_mortality(directory_hazard, scenario, year, exposures,
                                kanton=None, save_median_mat=False):
     """compute the impacts once:
 
@@ -38,15 +38,14 @@ def calculate_impact_mortality(directory_hazard, scenario, year, exposures, unce
     impact_dict = {}
     matrices = {} if save_median_mat else None
 
-    hazard = call_hazard(directory_hazard, scenario, year, uncertainty_variable=uncertainty_variable, kanton=kanton)
+    hazard = call_hazard(directory_hazard, scenario, year, kanton=kanton)
 
-    error = uncertainty_variable == 'impactfunction' or uncertainty_variable == 'all'  # this sentence evaluates to the correct boolean
-    if_hw_set = call_impact_functions(error)
+    if_hw_set = call_impact_functions()
     
     for key, grid in exposures.items():  # calculate impact for each type of exposure
         impact = Impact()
         
-        impact = calc_mortality(impact, key, grid, if_hw_set, hazard, kanton=kanton, save_mat=save_median_mat)
+        impact = calc_mortality(impact, key, grid, if_hw_set, hazard, kanton=kanton, save_mat=True)
 
         impact_dict[key] = np.sum(impact.imp_mat)
 
@@ -68,7 +67,7 @@ def calculate_impact_mortality(directory_hazard, scenario, year, exposures, unce
 
 # modify Impact object
 
-def calc_mortality(impact, key, exposures, impact_funcs, hazard, kanton, save_mat=False):
+def calc_mortality(impact, key, exposures, impact_funcs, hazard, kanton, save_mat=True):
     """Compute impact of an hazard to exposures.
 
     Parameters:
@@ -95,7 +94,7 @@ def calc_mortality(impact, key, exposures, impact_funcs, hazard, kanton, save_ma
     impact.coord_exp = np.stack([exposures.latitude.values,
                                  exposures.longitude.values], axis=1)
     impact.frequency = hazard.frequency
-    impact.at_event = np.zeros(hazard.intensity.shape[0])
+    impact.at_event = 'NA'
     impact.eai_exp = np.zeros(exposures.value.size)
     impact.tag = {'exp': exposures.tag, 'if_set': impact_funcs.tag,
                   'haz': hazard.tag}
@@ -153,8 +152,6 @@ def calc_mortality(impact, key, exposures, impact_funcs, hazard, kanton, save_ma
 
     if not tot_exp:
         LOGGER.warning('No impact functions match the exposures.')
-    impact.aai_agg = sum(impact.at_event * hazard.frequency)
-
     if save_mat:
         impact.imp_mat = impact.imp_mat.tocsr()
 
@@ -199,15 +196,15 @@ def exp_impact_mortality(impact, exp_iimp, exposures, key, hazard, imp_fun, insu
     # get exposure values
     exposure_values = exposures.value.values[exp_iimp] 
 
-    expected_deaths = {}
     daily_deaths = annual_deaths[annual_deaths['Canton'] == kanton_name]['Annual_deaths'].values[0] / 365
-    max_temp =  temperature_matrix.max()
-    for value in range(22, int(np.ceil(max_temp)) + 1):
-        expected_deaths[value] = daily_deaths / imp_fun.calc_mdr(value)
+    max_temp = temperature_matrix.max()
+    expected_deaths = {value: daily_deaths / imp_fun.calc_mdr(value)
+                       for value in range(22, int(np.ceil(max_temp)) + 1)}
     #print(expected_deaths)
 
     # Compute impact matrix
     matrix = impact_mortality(temperature_matrix, exposure_values, icens, expected_deaths, imp_fun, fract.shape)
+
 
     impact.eai_exp[exp_iimp] = matrix
 

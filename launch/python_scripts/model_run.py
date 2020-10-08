@@ -62,8 +62,7 @@ for kanton in kantons:  # loop through given kantons, one file per element in th
     # compute the impact. impact[0] is the loss for each category and Monte Carlo run, impact[0] is the impact matrix
     # for each category and Monte Carlo run
 
-    IMPACT = impact_monte_carlo(directory_hazard, scenarios, years_list, n_mc,
-                                uncertainty_variables_list=uncertainty_variables_list, kanton=kanton,
+    IMPACT = impact_monte_carlo(directory_hazard, scenarios, years_list, n_mc, kanton=kanton,
                                 age_group=age_group, save_median_mat=save_median_mat)
 
     with open(''.join([directory_output, 'loss_', groups_str, '_', str(n_mc), 'mc_',

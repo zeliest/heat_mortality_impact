@@ -1,7 +1,9 @@
 import pickle
 import sys
+
 sys.path.append('../../')
 from src.impact_calculation.impact_monte_carlo_parallel import impact_monte_carlo
+
 
 def convert(string):  # function that converts 'lists' from the bash input (strings) to python lists
     li = list(string.split(","))
@@ -9,13 +11,13 @@ def convert(string):  # function that converts 'lists' from the bash input (stri
 
 
 directory_output = '../../output/impact_ch/'  # where to save to output
-directory_hazard = '../../input_data/ch2018_sample/' # test data
+directory_hazard = '../../input_data/ch2018_sample/'  # test data
 
 n_mc = 1
 
 # check the third input, which determines if the input should be calculated for Switzerland,
 # all cantons indepentently or for one specific canton:
-kantons = ['Zürich'] # the None is put into a list, as we further loop through the cantons given
+kantons = [None]  # the None is put into a list, as we further loop through the cantons given
 
 # get fourth input, the years for which to compute the impact
 years_list = [2020]
@@ -26,10 +28,10 @@ scenarios = ['RCP85']
 # check if any age groups were given, or if the impact for all age groups should be computed
 
 age_group = None
-groups_str = 'all_age_groups' # string to name the file later on
+groups_str = 'all_age_groups'  # string to name the file later on
 
 # determine if the median damage matrix should be saved as output
-save_median_mat = False
+save_median_mat = True
 
 # in this base model run, all uncertainties are taken into account.
 # This is not the case in the sensibility testing code where all are taken one by one.
@@ -49,8 +51,7 @@ for kanton in kantons:  # loop through given kantons, one file per element in th
     # for each category and Monte Carlo run
 
     IMPACT = impact_monte_carlo(directory_hazard, scenarios, years_list, n_mc,
-                                uncertainty_variables_list=uncertainty_variables_list, kanton=kanton,
-                                age_group=age_group, save_median_mat=save_median_mat)
+                                kanton=kanton, age_group=age_group, save_median_mat=save_median_mat)
 
     with open(''.join([directory_output, 'loss_', groups_str, '_', str(n_mc), 'mc_',
                        uncertainty, '_', kanton_name, '.pickle']), 'wb') as handle:
@@ -58,5 +59,5 @@ for kanton in kantons:  # loop through given kantons, one file per element in th
     if save_median_mat:
         with open(''.join([directory_output, 'matrix_',
                            groups_str, '_', str(n_mc), 'mc_', uncertainty, '_', kanton_name,
-                           '.pickle']) , 'wb') as handle:
+                           '.pickle']), 'wb') as handle:
             pickle.dump(IMPACT[1], handle, protocol=pickle.HIGHEST_PROTOCOL)

@@ -16,7 +16,7 @@ np.warnings.filterwarnings('ignore')
 # In[ ]:
 
 
-def call_hazard(directory_hazard, scenario, year, uncertainty_variable='all', kanton=None):
+def call_hazard(directory_hazard, scenario, year, kanton=None):
     """Compute heat hazard for the CH2018 data, considered as any day where the T_max is higher than 22 degrees celsius
 
             Parameters:
@@ -29,19 +29,16 @@ def call_hazard(directory_hazard, scenario, year, uncertainty_variable='all', ka
             Returns:
                 hazards(dict): dictionary containing the hazard heat
                   """
-    if uncertainty_variable == 'all' or uncertainty_variable == 'years':
-        ny = random.randint(-3, 3)  # to be added to the year, so that any year in the +5 to -5 range can be picked
-    else:  # if we are testing the sensitivity to the change in variables, we always want to be taking
-        # the same year and therefore add 0
-        ny = 0
+    ny = random.randint(-3, 3)  # to be added to the year, so that any year in the +5 to -5 range can be picked
 
-    if uncertainty_variable == 'simulations' or uncertainty_variable == 'all':
-        nc_max_temp = np.random.choice(list(set(glob.glob(''.join([directory_hazard, '/tasmax/', '*', scenario, '*'])))))
-    else:
-        nc_max_temp = glob.glob(directory_hazard + '/tasmax/' + '*SMHI-RCA_NORESM_EUR44*')[0]
+    nc_max_temp = np.random.choice(list(set(glob.glob(''.join([directory_hazard, '/tasmax/', '*', scenario, '*'])))))
 
     tasmax = xr.open_dataset(nc_max_temp).sel(time=slice(''.join([str(year + ny), '-01-01']),
                                                          ''.join([str(year + 1 + ny), '-01-01'])))  # open as xr dataset
+    if not len(tasmax.tasmax):
+        tasmax = xr.open_dataset(nc_max_temp).sel(time=slice(''.join([str(year), '-01-01']),
+                                                             ''.join([str(year + 1), '-01-01'])))
+
 
     if kanton:  # if a canton is specified, we mask the values outside of this canton using a day_startapefile
         shp_dir = '../../input_data/shapefiles/KANTONS_projected_epsg4326/' \
@@ -61,42 +58,31 @@ def call_hazard(directory_hazard, scenario, year, uncertainty_variable='all', ka
     # variables needed for the model
 
     number_days = len(tasmax.time)
-    temp = np.zeros([number_days, nlats, nlons]) # array where we save the data for the heat hazard
-    day = 0  # start at day 0
-    dates = np.zeros(number_days)
 
     # create an array with the maximum temperature of the day
 
-    for t in range(number_days):  # loop over the number of days in a year
+   # for t in range(number_days):  # loop over the number of days in a year
 
-        dates[t] = Timestamp(tasmax.time.values[day]).toordinal()
-        temp[t,:,:] = (tasmax.tasmax.values[day])
-            
-        day = day + 1
+    dates = [Timestamp(tasmax.time.values[t]).toordinal() for t in range(number_days)]
 
-    nevents = len(temp)  # number of events
-    events = range(len(temp))  # number of each event
-    event_dates = dates
-    temp_data = temp
-    hazard_types = 'heat'
+    nevents = len(dates)  # number of events
+    events = range(len(dates))  # number of each event
 
     grid_x, grid_y = np.meshgrid(tasmax.lon.values, tasmax.lat.values)
     heat = Hazard('heat')
     heat.centroids.set_lat_lon(grid_y.flatten(), grid_x.flatten(), crs={'init': 'epsg:4326'})
     heat.units = 'degrees C'
-    heat_data = temp_data
-    heat_data[np.isnan(heat_data)] = 0.  # replace NAs by 0
-    heat.intensity = sparse.csr_matrix(heat_data.reshape(nevents, nlons * nlats))
+    tasmax.tasmax.values[np.isnan(tasmax.tasmax.values)] = 0.  # replace NAs by 0
+    heat.intensity = sparse.csr_matrix(tasmax.tasmax.values.reshape(nevents, nlons * nlats))
     heat.event_id = np.array(events)
     heat.event_name = heat.event_id
     heat.frequency = np.ones(nevents)
     heat.fraction = heat.intensity.copy()
     heat.fraction.data.fill(1)
-    heat.date = event_dates
+    heat.date = np.array(dates)
     heat.check()
 
     tasmax.close()
     del tasmax
-    del temp
 
     return heat  # return the hazards

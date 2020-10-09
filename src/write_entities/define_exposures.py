@@ -10,7 +10,7 @@ from src.util.shapefile_masks import vector_shapefile_mask
 
 # In[ ]:
 
-def call_exposures(kanton=None, age_group=None, epsg_output=4326, save_exposures=False):
+def call_exposures(kanton=None, age_group=None, epsg_output=4326, save_exposures=False, population_ratio=True):
     """write the Exposures:
 
                     Parameters:
@@ -106,9 +106,12 @@ def call_exposures(kanton=None, age_group=None, epsg_output=4326, save_exposures
 
         population_sum_intensity['longitude'] = np.asarray(population_loc_intensity['E_KOORD']).flatten()
         population_sum_intensity['latitude'] = np.asarray(population_loc_intensity['N_KOORD']).flatten()
-
-        population_sum_intensity['value'] = np.asarray(
-            population_loc_intensity[population_loc_intensity.columns[2:]].sum(axis=1) / pop_tot_ch[name])
+        if population_ratio:
+            population_sum_intensity['value'] = np.asarray(
+                population_loc_intensity[population_loc_intensity.columns[2:]].sum(axis=1) / pop_tot_ch[name])
+        else:
+            population_sum_intensity['value'] = np.asarray(
+                population_loc_intensity[population_loc_intensity.columns[2:]].sum(axis=1))
         n_exp = len(population_sum_intensity['value'])
 
         if kanton:  # test if a canton was specified, in that case
@@ -118,8 +121,8 @@ def call_exposures(kanton=None, age_group=None, epsg_output=4326, save_exposures
 
             population_sum_intensity = vector_shapefile_mask(population_sum_intensity, shp_dir, kanton, epsg_data,
                                                           epsg_output)
-
-            population_sum_intensity['value'] = population_sum_intensity['value'] * pop_tot_ch[name] / pop_tot_canton[name]
+            if population_ratio:
+                population_sum_intensity['value'] = population_sum_intensity['value'] * pop_tot_ch[name] / pop_tot_canton[name]
 
             population_sum_intensity = Exposures(population_sum_intensity)  # define as Exposure class
             population_sum_intensity.set_lat_lon()

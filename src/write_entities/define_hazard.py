@@ -6,17 +6,13 @@ from pandas import Timestamp
 from scipy import sparse
 
 from climada.hazard import Hazard
-
-import sys
-from src.util.shapefile_masks import add_shape_coord_from_data_array
-
 np.warnings.filterwarnings('ignore')
 
 
 # In[ ]:
 
 
-def call_hazard(directory_hazard, scenario, year, kanton=None):
+def call_hazard(directory_hazard, scenario, year):
     """Compute heat hazard for the CH2018 data, considered as any day where the T_max is higher than 22 degrees celsius
 
             Parameters:
@@ -24,7 +20,7 @@ def call_hazard(directory_hazard, scenario, year, kanton=None):
                 scenario (str): scenario for which to compute the hazards
                 year(str): year for which to compute the hazards
                 uncertainty_variable (str): variable for which to consider the uncertainty. Default: 'all'
-                kanton (str or None): Name of canton. Default: None (all of Switzerland)
+                region (str or None): Name of canton. Default: None (all of Switzerland)
 
             Returns:
                 hazards(dict): dictionary containing the hazard heat
@@ -32,20 +28,11 @@ def call_hazard(directory_hazard, scenario, year, kanton=None):
     ny = random.randint(-3, 3)  # to be added to the year, so that any year in the +5 to -5 range can be picked
 
     nc_max_temp = np.random.choice(list(set(glob.glob(''.join([directory_hazard, '/tasmax/', '*', scenario, '*'])))))
-
     tasmax = xr.open_dataset(nc_max_temp).sel(time=slice(''.join([str(year + ny), '-01-01']),
                                                          ''.join([str(year + 1 + ny), '-01-01'])))  # open as xr dataset
     if not len(tasmax.tasmax):
         tasmax = xr.open_dataset(nc_max_temp).sel(time=slice(''.join([str(year), '-01-01']),
                                                              ''.join([str(year + 1), '-01-01'])))
-
-
-    if kanton:  # if a canton is specified, we mask the values outside of this canton using a day_startapefile
-        shp_dir = '../../input_data/shapefiles/KANTONS_projected_epsg4326/' \
-                  'swissBOUNDARIES3D_1_3_TLM_KANTONSGEBIET_epsg4326.shp'
-
-        tasmax = add_shape_coord_from_data_array(tasmax, shp_dir, kanton)
-        tasmax = tasmax.where(tasmax[kanton] == 0, other=np.nan)
 
     # replace all values where the maximum
     # temperature does not reach 22 degrees by nas in TASMAX and drop time steps that only have NAs
@@ -55,13 +42,7 @@ def call_hazard(directory_hazard, scenario, year, kanton=None):
     nlats = len(tasmax.lat)  # number of latitudes
     nlons = len(tasmax.lon)  # number of longitudes
 
-    # variables needed for the model
-
     number_days = len(tasmax.time)
-
-    # create an array with the maximum temperature of the day
-
-   # for t in range(number_days):  # loop over the number of days in a year
 
     dates = [Timestamp(tasmax.time.values[t]).toordinal() for t in range(number_days)]
 

@@ -1,9 +1,7 @@
 #!/bin/sh
  
-area='CH'
 years='2020,2035,2050'
 scenario='RCP26,RCP45,RCP85'
-age_groups=0
 save_matrix=0
 n_mc=100
 
@@ -15,15 +13,11 @@ while getopts "d::f::c::g::y::s::b::m::" opt; do
     ;;
     f) directory_ch2018="$OPTARG"
     ;;
-    c) n_mc="$OPTARG"    
-    ;;
-    g) area="$OPTARG" 
+    c) n_mc="$OPTARG"
     ;;
     y) years="$OPTARG"
     ;;
     s) scenario="$OPTARG"
-    ;;
-    b) age_groups="$OPTARG"
     ;;
     m) save_matrix="$OPTARG"
     ;;
@@ -42,7 +36,7 @@ source activate climada_env
 cd $path_model
 
 
-python3 ${path_model}/../python_scripts/model_run.py $directory_ch2018 $n_mc $area $years $scenario $age_groups $save_matrix
+python3 ${path_model}/../python_scripts/model_run.py $directory_ch2018 $n_mc $years $scenario $save_matrix
 
 #conda deactivate
 

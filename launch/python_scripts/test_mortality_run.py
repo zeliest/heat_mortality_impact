@@ -1,63 +1,32 @@
-import pickle
 import sys
+import pandas as pd
+from climada.entity import Exposures
+from src.impact_calculation.impact_heat import ImpactsHeatMortality
+from src.write_entities.define_exposures import call_exposures_switzerland_mortality
 
 sys.path.append('../../')
-from src.impact_calculation.impact_monte_carlo_parallel import impact_monte_carlo
-
-
-def convert(string):  # function that converts 'lists' from the bash input (strings) to python lists
-    li = list(string.split(","))
-    return li
-
 
 directory_output = '../../output/impact_ch/'  # where to save to output
 directory_hazard = '../../input_data/ch2018_sample/'  # test data
-
-n_mc = 1
-
-# check the third input, which determines if the input should be calculated for Switzerland,
-# all cantons indepentently or for one specific canton:
-kantons = ['Zürich']  # the None is put into a list, as we further loop through the cantons given
-
-# get fourth input, the years for which to compute the impact
-years_list = [2020]
-
-# get fifth input, the scenarios for which to compute the impact
+n_mc = 2
+years = [2020]
 scenarios = ['RCP85']
 
-# check if any age groups were given, or if the impact for all age groups should be computed
+directory_if = '../../input_data/impact_functions/'
+annual_deaths = pd.read_excel(''.join([directory_if, 'annual_deaths.xlsx']))
 
-age_group = None
-groups_str = 'all_age_groups'  # string to name the file later on
+directory_exposures = '../../input_data/exposures/'
+file_info = ''.join([directory_exposures, 'age_categories.csv'])
+file_locations = ''.join([directory_exposures, 'STATPOP2018.csv'])
+shp_dir = '../../input_data/shapefiles/KANTONS_projected_epsg4326/'
+file_cantons = ''.join([shp_dir, 'swissBOUNDARIES3D_1_3_TLM_KANTONSGEBIET_epsg4326.shp'])
+#exposures = call_exposures_switzerland_mortality(file_info, file_locations, file_cantons, annual_deaths, save=True)
+exposures = {}
+for category in ['O', 'U']:
+    exposures_file = ''.join([directory_exposures, 'exposures_mortality_ch_',category,'.h5'])
+    exposures[category] = Exposures()
+    exposures[category].read_hdf5(exposures_file)
+    exposures[category] = exposures[category][exposures[category]['canton'] == 'Zürich']
 
-# determine if the median damage matrix should be saved as output
-save_median_mat = True
-
-# in this base model run, all uncertainties are taken into account.
-# This is not the case in the sensibility testing code where all are taken one by one.
-uncertainty_variables_list = ['None']
-uncertainty = 'none'
-
-for kanton in kantons:  # loop through given kantons, one file per element in the kantons loop will be produced.
-    # If cantons only contains None, only one file corresponding to all of Switzerland is produced,
-    # otherwise one per canton will be written.
-
-    if kanton is None:
-        kanton_name = 'CH'
-    else:
-        kanton_name = kanton
-
-    # compute the impact. impact[0] is the loss for each category and Monte Carlo run, impact[0] is the impact matrix
-    # for each category and Monte Carlo run
-
-    IMPACT = impact_monte_carlo(directory_hazard, scenarios, years_list, n_mc,
-                                kanton=kanton, age_group=age_group, save_median_mat=save_median_mat)
-
-    with open(''.join([directory_output, 'loss_', groups_str, '_', str(n_mc), 'mc_',
-                       uncertainty, '_', kanton_name, '.pickle']), 'wb') as handle:
-        pickle.dump(IMPACT[0], handle, protocol=pickle.HIGHEST_PROTOCOL)
-    if save_median_mat:
-        with open(''.join([directory_output, 'matrix_',
-                           groups_str, '_', str(n_mc), 'mc_', uncertainty, '_', kanton_name,
-                           '.pickle']), 'wb') as handle:
-            pickle.dump(IMPACT[1], handle, protocol=pickle.HIGHEST_PROTOCOL)
+impacts_mortality = ImpactsHeatMortality(scenarios, years, n_mc)
+impacts_mortality.impacts_years_scenarios(exposures, directory_hazard)

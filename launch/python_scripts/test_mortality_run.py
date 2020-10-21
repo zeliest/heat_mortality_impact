@@ -11,6 +11,7 @@ directory_hazard = '../../input_data/ch2018_sample/'  # test data
 n_mc = 2
 years = [2020]
 scenarios = ['RCP85']
+nyears_hazards = 10
 
 directory_if = '../../input_data/impact_functions/'
 annual_deaths = pd.read_excel(''.join([directory_if, 'annual_deaths.xlsx']))
@@ -29,4 +30,4 @@ for category in ['O', 'U']:
     exposures[category] = exposures[category][exposures[category]['canton'] == 'Zürich']
 
 impacts_mortality = ImpactsHeatMortality(scenarios, years, n_mc)
-impacts_mortality.impacts_years_scenarios(exposures, directory_hazard)
+impacts_mortality.impacts_years_scenarios(exposures, directory_hazard, nyears_hazards)

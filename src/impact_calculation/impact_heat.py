@@ -18,8 +18,8 @@ class ImpactsHeatProductivity:
         self.agg_impacts_mc = dict()
         self.median_impact_matrices = dict()
 
-    def calculate_impact(self, scenario, year, exposures, directory_hazard, crs_exposures=4326):
-        hazard = call_hazard(directory_hazard, scenario, year)
+    def calculate_impact(self, scenario, year, exposures, directory_hazard, nyears_hazards, crs_exposures=4326):
+        hazard = call_hazard(directory_hazard, scenario, year, nyears_hazards)
         if_hw_set = call_impact_functions()
         impact = Impact()
         exposures = Exposures(exposures)
@@ -27,17 +27,17 @@ class ImpactsHeatProductivity:
         impact.calc(exposures, if_hw_set, hazard, save_mat=True)
         return impact.imp_mat
 
-    def parallel_impact_calculation(self, scenario, year, exposure, directory_hazard):
+    def parallel_impact_calculation(self, scenario, year, exposure, directory_hazard, nyears_hazards):
         ncores_max = cpu_count()
-        return Parallel(n_jobs=ncores_max)(delayed(self.calculate_impact)(scenario, year, exposure, directory_hazard)
+        return Parallel(n_jobs=ncores_max)(delayed(self.calculate_impact)(scenario, year, exposure, directory_hazard, nyears_hazards)
                                            for i in range(0, self.n_mc))
 
-    def impacts_years_scenarios(self, exposures, directory_hazard, save_median_mat=False):
+    def impacts_years_scenarios(self, exposures, directory_hazard, nyears_hazards, save_median_mat=False):
         ###########################################################################################################
         # loop over years
 
         impacts = {scenario: {year: {category: self.parallel_impact_calculation(scenario, year,
-                                                    exposures[category], directory_hazard)
+                                                    exposures[category], directory_hazard, nyears_hazards)
                                      for category in exposures} for year in self.years}
                    for scenario in self.scenarios}
         if save_median_mat:
@@ -49,16 +49,16 @@ class ImpactsHeatProductivity:
         self.agg_impacts_mc = {scenario: {year: {category: [impacts[scenario][year][category][n].sum()
                                                             for n in range(self.n_mc)] for category
                                                  in exposures} for year in self.years} for scenario in self.scenarios}
-
+        del impacts
 
 class ImpactsHeatMortality(ImpactsHeatProductivity):
     def __init__(self, scenarios, years, n_mc):
         super().__init__(scenarios, years, n_mc)
 
-    def calculate_impact(self, scenario, year, exposures, directory_hazard, crs_exposures=4326):
+    def calculate_impact(self, scenario, year, exposures, directory_hazard, nyears_hazards, crs_exposures=4326):
         exposures = Exposures(exposures)
         exposures.check()
-        hazard = call_hazard(directory_hazard, scenario, year)
+        hazard = call_hazard(directory_hazard, scenario, year, nyears_hazards)
         if_hw_set = call_impact_functions()
         impact = ImpactHeatMortality()
         impact.calc(exposures, if_hw_set, hazard, save_mat=True)

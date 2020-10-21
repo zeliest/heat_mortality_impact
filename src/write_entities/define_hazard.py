@@ -12,7 +12,7 @@ np.warnings.filterwarnings('ignore')
 # In[ ]:
 
 
-def call_hazard(directory_hazard, scenario, year):
+def call_hazard(directory_hazard, scenario, year, nyears_hazards):
     """Compute heat hazard for the CH2018 data, considered as any day where the T_max is higher than 22 degrees celsius
 
             Parameters:
@@ -25,7 +25,7 @@ def call_hazard(directory_hazard, scenario, year):
             Returns:
                 hazards(dict): dictionary containing the hazard heat
                   """
-    ny = random.randint(-3, 3)  # to be added to the year, so that any year in the +5 to -5 range can be picked
+    ny = random.randint(-(nyears_hazards/2), nyears_hazards/2)  # to be added to the year, so that any year in the +5 to -5 range can be picked
 
     nc_max_temp = np.random.choice(list(set(glob.glob(''.join([directory_hazard, '/tasmax/', '*', scenario, '*'])))))
     tasmax = xr.open_dataset(nc_max_temp).sel(time=slice(''.join([str(year + ny), '-01-01']),

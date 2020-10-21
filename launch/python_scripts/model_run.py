@@ -20,7 +20,7 @@ n_mc = literal_eval(sys.argv[2])  # number of Monte Carlo runs
 
 # get third input, the years for which to compute the impact
 years = [int(i) for i in convert(sys.argv[3])]
-
+nyears_hazards = 10
 # get fifth input, the scenarios for which to compute the impact
 scenarios = convert(sys.argv[4])
 
@@ -33,12 +33,12 @@ else:
 exposures = {}
 directory_exposures = '../../input_data/exposures/'
 for category in ['O', 'U']:
-    exposures_file = ''.join([directory_exposures, 'exposures_mortality_ch_',category,'.h5'])
+    exposures_file = ''.join([directory_exposures, 'exposures_mortality_ch_', category, '.h5'])
     exposures[category] = Exposures()
     exposures[category].read_hdf5(exposures_file)
 
 impacts_mortality = ImpactsHeatMortality(scenarios, years, n_mc)
-impacts_mortality.impacts_years_scenarios(exposures, directory_hazard, save_median_mat=save_median_mat)
+impacts_mortality.impacts_years_scenarios(exposures, directory_hazard, nyears_hazards, save_median_mat=save_median_mat)
 
 with open(''.join([directory_output, 'impact_', str(n_mc), 'mc', '.pickle']), 'wb') as handle:
     pickle.dump(impacts_mortality, handle, protocol=pickle.HIGHEST_PROTOCOL)

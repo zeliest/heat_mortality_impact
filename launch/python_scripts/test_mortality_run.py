@@ -1,14 +1,17 @@
+import pickle
 import sys
 import pandas as pd
 from climada.entity import Exposures
+sys.path.append('../../')
+
 from src.impact_calculation.impact_heat import ImpactsHeatMortality
 from src.write_entities.define_exposures import call_exposures_switzerland_mortality
 
-sys.path.append('../../')
 
-directory_output = '../../output/impact_ch/'  # where to save to output
-directory_hazard = '../../input_data/ch2018_sample/'  # test data
-n_mc = 2
+directory_output = '../../output/mortality_results/'  # where to save to output
+directory_hazard = '/Users/zeliestalhanske/Desktop/Master/Thesis/Hazard/ch20182/'  # test data
+#directory_hazard = '../../input_data/ch2018_sample/'  # test data
+n_mc = 8
 years = [2020]
 scenarios = ['RCP85']
 nyears_hazards = 10
@@ -27,7 +30,10 @@ for category in ['O', 'U']:
     exposures_file = ''.join([directory_exposures, 'exposures_mortality_ch_',category,'.h5'])
     exposures[category] = Exposures()
     exposures[category].read_hdf5(exposures_file)
-    exposures[category] = exposures[category][exposures[category]['canton'] == 'Zürich']
+    #exposures[category] = exposures[category][exposures[category]['canton'] == 'Zürich']
 
 impacts_mortality = ImpactsHeatMortality(scenarios, years, n_mc)
 impacts_mortality.impacts_years_scenarios(exposures, directory_hazard, nyears_hazards)
+
+with open(''.join([directory_output, 'impact_', str(n_mc), 'mc', '.pickle']), 'wb') as handle:
+    pickle.dump(impacts_mortality, handle, protocol=pickle.HIGHEST_PROTOCOL)

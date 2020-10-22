@@ -10,6 +10,18 @@ from src.write_entities.define_hazard import call_hazard
 from src.write_entities.define_if import call_impact_functions
 
 
+import numpy as np
+from climada.engine import Impact
+from climada.entity import Exposures
+from joblib import Parallel, delayed
+from multiprocessing import cpu_count
+from climada.entity.exposures.base import INDICATOR_CENTR
+from scipy.sparse import vstack, csr_matrix
+
+from src.write_entities.define_hazard import call_hazard
+from src.write_entities.define_if import call_impact_functions
+
+
 class ImpactsHeatProductivity:
     def __init__(self, scenarios, years, n_mc):
         self.scenarios = scenarios
@@ -27,29 +39,32 @@ class ImpactsHeatProductivity:
         impact.calc(exposures, if_hw_set, hazard, save_mat=True)
         return impact.imp_mat
 
-    def parallel_impact_calculation(self, scenario, year, exposure, directory_hazard, nyears_hazards):
+    def parallel_impact_calculation(self, scenario, year, exposure, directory_hazard, nyears_hazards, save_median_mat):
         ncores_max = cpu_count()
-        return Parallel(n_jobs=ncores_max)(delayed(self.calculate_impact)(scenario, year, exposure, directory_hazard, nyears_hazards)
-                                           for i in range(0, self.n_mc))
+        impacts = Parallel(n_jobs=ncores_max)(delayed(self.calculate_impact)
+                                              (scenario, year, exposure, directory_hazard, nyears_hazards)
+                                              for i in range(0, self.n_mc))
 
-    def impacts_years_scenarios(self, exposures, directory_hazard, nyears_hazards, save_median_mat=False):
-        ###########################################################################################################
-        # loop over years
+        agg_impacts_mc = [np.sum(impacts[n]) for n in range(self.n_mc)]
+        if save_median_mat:
+            median_impact_matrices = csr_matrix(np.median(vstack(impacts[n]
+                                                                    for n in range(self.n_mc)).toarray(), axis=0))
+            return [agg_impacts_mc, median_impact_matrices]
+
+        return [agg_impacts_mc]
+
+    def impacts_years_scenarios(self, exposures, directory_hazard, nyears_hazards, save_median_mat=True):
 
         impacts = {scenario: {year: {category: self.parallel_impact_calculation(scenario, year,
-                                                    exposures[category], directory_hazard, nyears_hazards)
+                                                    exposures[category], directory_hazard, nyears_hazards, save_median_mat)
                                      for category in exposures} for year in self.years}
                    for scenario in self.scenarios}
+        self.agg_impacts_mc = {scenario: {year: {category: impacts[scenario][year][category][0]
+                                     for category in exposures} for year in self.years} for scenario in self.scenarios}
         if save_median_mat:
-            self.median_impact_matrices = {
-                scenario: {year: {category: csr_matrix(np.median(vstack(impacts[scenario][year][category][n]
-                                                                        for n in range(self.n_mc)).toarray(), axis=0))
-                                  for category
-                                  in exposures} for year in self.years} for scenario in self.scenarios}
-        self.agg_impacts_mc = {scenario: {year: {category: [impacts[scenario][year][category][n].sum()
-                                                            for n in range(self.n_mc)] for category
-                                                 in exposures} for year in self.years} for scenario in self.scenarios}
-        del impacts
+            self.median_impact_matrices = {scenario: {year: {category: impacts[scenario][year][category][1]
+                                                     for category in exposures} for year in self.years} for scenario in
+                                   self.scenarios}
 
 class ImpactsHeatMortality(ImpactsHeatProductivity):
     def __init__(self, scenarios, years, n_mc):

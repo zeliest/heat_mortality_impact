@@ -36,7 +36,7 @@ source activate climada_env
 cd $path_model
 
 
-python3 -W ignore:semaphore_tracker:UserWarning ${path_model}/../python_scripts/model_run.py $directory_ch2018 $n_mc $years $scenario $save_matrix
+python3 ${path_model}/../python_scripts/model_run.py $directory_ch2018 $n_mc $years $scenario $save_matrix
 
 #conda deactivate
 

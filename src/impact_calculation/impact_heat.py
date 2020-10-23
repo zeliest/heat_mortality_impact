@@ -10,18 +10,6 @@ from src.write_entities.define_hazard import call_hazard
 from src.write_entities.define_if import call_impact_functions
 
 
-import numpy as np
-from climada.engine import Impact
-from climada.entity import Exposures
-from joblib import Parallel, delayed
-from multiprocessing import cpu_count
-from climada.entity.exposures.base import INDICATOR_CENTR
-from scipy.sparse import vstack, csr_matrix
-
-from src.write_entities.define_hazard import call_hazard
-from src.write_entities.define_if import call_impact_functions
-
-
 class ImpactsHeatProductivity:
     def __init__(self, scenarios, years, n_mc):
         self.scenarios = scenarios
@@ -65,6 +53,7 @@ class ImpactsHeatProductivity:
             self.median_impact_matrices = {scenario: {year: {category: impacts[scenario][year][category][1]
                                                      for category in exposures} for year in self.years} for scenario in
                                    self.scenarios}
+
 
 class ImpactsHeatMortality(ImpactsHeatProductivity):
     def __init__(self, scenarios, years, n_mc):

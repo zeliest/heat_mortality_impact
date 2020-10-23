@@ -5,7 +5,7 @@ scenario='RCP26,RCP45,RCP85'
 save_matrix=0
 n_mc=100
 
-while getopts "d::f::c::g::y::s::b::m::" opt; do
+while getopts "d::f::c:::y::s::m::" opt; do
 
   case $opt in
 

@@ -10,7 +10,7 @@ from climada.entity import Exposures
 from scipy.sparse import csr_matrix
 
 
-def plot_impacts_heat(agg_impacts_mc, title, color=None):
+def plot_impacts_heat(agg_impacts_mc, unit, color=None):
     # Add a column to each dataframe with the sum of all exposures for each monte carlo.
     for s_ in agg_impacts_mc:
         for y_ in agg_impacts_mc[s_]:
@@ -42,13 +42,13 @@ def plot_impacts_heat(agg_impacts_mc, title, color=None):
 
     fig, ax = plt.subplots()
     plot_clustered_stacked(median, title='', color=color)
-    plt.ylabel(title)
+    plt.ylabel(unit)
     ax.ticklabel_format(style='plain')
 
     # plt.savefig(''.join([fig_dir,'loss_ch/predicted_loss_2020_2065.pdf']),bbox_inches='tight')
     fig, ax = plt.subplots()
     plot_clustered_stacked_with_error(median, minimums, maximums, color=color)
-    plt.ylabel(title)
+    plt.ylabel(unit)
 
 
 def plot_clustered_stacked(dataframe_dict, title="multiple stacked bar plot", H="/", **kwargs):
@@ -149,7 +149,7 @@ partly copied from: https://stackoverflow.com/questions/22787209/how-to-have-clu
     return ax
 
 
-def impact_matrix_as_impact(impact_matrix, exposures, percentage=False, canton=None):
+def impact_matrix_as_impact(impact_matrix, exposures, units, percentage=False, canton=None):
     impact = Impact()
     if canton:
         canton_data = exposures['canton'] == canton
@@ -164,6 +164,6 @@ def impact_matrix_as_impact(impact_matrix, exposures, percentage=False, canton=N
     if percentage:
         impact.imp_mat = csr_matrix((csr_matrix(impact_matrix).toarray()[0, :]
                         / exposures.value.replace(0, 1)) * 100)  # put impacts in terms of percentage of exposure
-    impact.unit = '%'
+    impact.unit = units
     return impact
 

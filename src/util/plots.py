@@ -149,21 +149,4 @@ partly copied from: https://stackoverflow.com/questions/22787209/how-to-have-clu
     return ax
 
 
-def impact_matrix_as_impact(impact_matrix, exposures, units, percentage=False, canton=None):
-    impact = Impact()
-    if canton:
-        canton_data = exposures['canton'] == canton
-        exposures = exposures[canton_data]
-    impact.coord_exp = np.stack([exposures.latitude.values, exposures.longitude.values], axis=1)
-    impact.event_id = np.array([1])
-    if canton:
-        index = [i for i, x in enumerate(canton_data) if x == True]
-        impact.imp_mat = impact_matrix[:, index]
-    else:
-        impact.imp_mat = impact_matrix
-    if percentage:
-        impact.imp_mat = csr_matrix((csr_matrix(impact_matrix).toarray()[0, :]
-                        / exposures.value.replace(0, 1)) * 100)  # put impacts in terms of percentage of exposure
-    impact.unit = units
-    return impact
 

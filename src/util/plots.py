@@ -58,7 +58,6 @@ def plot_impacts_heat(agg_impacts_mc, unit, uncertainty=True, color=None, refere
     ax.ticklabel_format(style='plain')
 
 
-
 def plot_clustered_stacked(dataframe_dict, title="multiple stacked bar plot", H="/", **kwargs):
     """Given a dict of dataframes, with identical columns and index, create a clustered stacked bar plot.
 labels is a list of the names of the dataframe, used for the legend

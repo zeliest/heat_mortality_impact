@@ -10,7 +10,7 @@ from climada.entity import Exposures
 from scipy.sparse import csr_matrix
 
 
-def plot_impacts_heat(agg_impacts_mc, unit, color=None):
+def plot_impacts_heat(agg_impacts_mc, unit, uncertainty=True, color=None, reference_year=2020):
     # Add a column to each dataframe with the sum of all exposures for each monte carlo.
     for s_ in agg_impacts_mc:
         for y_ in agg_impacts_mc[s_]:
@@ -18,37 +18,45 @@ def plot_impacts_heat(agg_impacts_mc, unit, color=None):
             agg_impacts_mc[s_][y_]['total'] \
                 = agg_impacts_mc[s_][y_][list(agg_impacts_mc[s_][y_].columns)].sum(axis=1)
 
-    RCPs = {'RCP26': 'RCP2.6', 'RCP45': 'RCP4.5', 'RCP85': 'RCP8.5'}  # to get the correct name in the plots
+    rcps = {'RCP26': 'RCP2.6', 'RCP45': 'RCP4.5', 'RCP85': 'RCP8.5'}  # to get the correct name in the plots
 
     median = {}
     minimums = {}
     maximums = {}
 
-    for s_ in agg_impacts_mc:
-        median[RCPs[s_]] = pd.DataFrame()  # dataframe containing the median realization for the different exposures
-        maximums[RCPs[
-            s_]] = pd.DataFrame()  # dataframe containing the 95th percentile realization for the different exposures
-        minimums[RCPs[
-            s_]] = pd.DataFrame()  # dataframe containing the 5th percentile realization for the different exposures
+    if uncertainty:
+        for s_ in agg_impacts_mc:
+            median[rcps[s_]] = pd.DataFrame()  # dataframe containing the median realization for the different exposures
+            maximums[rcps[
+                s_]] = pd.DataFrame()  # dataframe containing the 95th percentile realization for the different exposures
+            minimums[rcps[
+                s_]] = pd.DataFrame()  # dataframe containing the 5th percentile realization for the different exposures
 
-        for y_ in agg_impacts_mc[s_]:
-            median[RCPs[s_]][y_] = ((agg_impacts_mc[s_][y_].iloc[:, 0:-1]).median())  # don't need the total here
-            maximums[RCPs[s_]][y_] = ((agg_impacts_mc[s_][y_].iloc[:, 0:-1]).quantile(0.95))
-            minimums[RCPs[s_]][y_] = ((agg_impacts_mc[s_][y_].iloc[:, 0:-1]).quantile(0.05))
+            for y_ in agg_impacts_mc[s_]:
+                median[rcps[s_]][y_] = ((agg_impacts_mc[s_][y_].iloc[:, 0:-1]).median())  # don't need the total here
+                maximums[rcps[s_]][y_] = ((agg_impacts_mc[s_][y_].iloc[:, 0:-1]).quantile(0.95))
+                minimums[rcps[s_]][y_] = ((agg_impacts_mc[s_][y_].iloc[:, 0:-1]).quantile(0.05))
 
-        median[RCPs[s_]] = median[RCPs[s_]].transpose()
-        maximums[RCPs[s_]] = maximums[RCPs[s_]].transpose()
-        minimums[RCPs[s_]] = minimums[RCPs[s_]].transpose()
+            median[rcps[s_]] = median[rcps[s_]].transpose()
+            maximums[rcps[s_]] = maximums[rcps[s_]].transpose()
+            minimums[rcps[s_]] = minimums[rcps[s_]].transpose()
+
+        # plt.savefig(''.join([fig_dir,'loss_ch/predicted_loss_2020_2065.pdf']),bbox_inches='tight')
+        plot_clustered_stacked_with_error(median, minimums, maximums, color=color)
+        plt.ylabel(unit)
+
+    else:
+        for s_ in agg_impacts_mc:
+            median[rcps[s_]] = pd.DataFrame()  # dataframe containing the median realization for the different exposures
+            for y_ in agg_impacts_mc[s_]:
+                median[rcps[s_]][y_] = ((agg_impacts_mc[s_][y_].iloc[:, 0:-1]).median())  # don't need the total here
+            median[rcps[s_]] = median[rcps[s_]].transpose()
 
     fig, ax = plt.subplots()
     plot_clustered_stacked(median, title='', color=color)
     plt.ylabel(unit)
     ax.ticklabel_format(style='plain')
 
-    # plt.savefig(''.join([fig_dir,'loss_ch/predicted_loss_2020_2065.pdf']),bbox_inches='tight')
-    fig, ax = plt.subplots()
-    plot_clustered_stacked_with_error(median, minimums, maximums, color=color)
-    plt.ylabel(unit)
 
 
 def plot_clustered_stacked(dataframe_dict, title="multiple stacked bar plot", H="/", **kwargs):
@@ -147,6 +155,4 @@ partly copied from: https://stackoverflow.com/questions/22787209/how-to-have-clu
         median[s_].columns = labels_graph
 
     return ax
-
-
 

@@ -8,6 +8,7 @@ from multiprocessing import cpu_count
 from climada.entity.exposures.base import INDICATOR_CENTR
 from scipy.sparse import vstack, csr_matrix
 
+from src.util.plots import plot_impacts_heat
 from src.write_entities.define_hazard import call_hazard
 from src.write_entities.define_if import call_impact_functions
 
@@ -86,7 +87,7 @@ class ImpactsHeatProductivity:
 
     def calculate_impact_agg_canton(self, canton, exposures):
         impact = self.median_matrices_as_impacts(exposures, canton=canton)
-        agg_impact = {scenario: {year: {category: impact[scenario][year][category].imp_mat.sum()
+        agg_impact = {scenario: {year: {category: [impact[scenario][year][category].imp_mat.sum()]
                            for category in exposures} for year in self.years} for scenario in self.scenarios}
         return agg_impact
 
@@ -159,3 +160,11 @@ class ImpactHeatMortality(Impact):
         af = {t: np.divide(value[t], value[t] + 1) for t in temperatures}
         return np.sum(af[t] * occurence[t] * average_death for t in temperatures)
 
+pickle_in = \
+open('../../output/mortality_results/impact_10mc.pickle','rb')
+impacts_mortality = pickle.load(pickle_in)
+
+agg_impacts_mc = impacts_mortality.agg_impacts_mc
+median_impact_matrices = impacts_mortality.median_impact_matrices
+
+plot_impacts_heat(agg_impacts_mc, 'Annual Heat Related Death (#)', color=['lightblue', 'royalblue'])

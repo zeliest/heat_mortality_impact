@@ -104,6 +104,13 @@ class ImpactsHeatProductivity:
             for category in categories} for year in self.years} for scenario in self.scenarios}
         return relative_median_impact_matrices
 
+    def append_years(self, impacts):
+        for year in impacts.years:
+            for scenario in impacts.scenarios:
+                self.median_impact_matrices[scenario][year] = impacts.median_impact_matrices[scenario][year]
+                self.agg_impacts_mc[scenario][year] = impacts.agg_impacts_mc[scenario][year]
+        self.years = sorted(self.years + impacts.years)
+
     @staticmethod
     def compute_relative_change(matrix, matrix_ref):
         matrix_rel = (np.nan_to_num((matrix.toarray() - matrix_ref.toarray())/matrix_ref.toarray()))*100

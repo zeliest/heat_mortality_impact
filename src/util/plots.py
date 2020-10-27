@@ -13,7 +13,7 @@ from scipy.sparse import csr_matrix
 def plot_impacts_heat(agg_impacts_mc, unit, uncertainty=True, color=None):
     # Add a column to each dataframe with the sum of all exposures for each monte carlo.
     for s_ in agg_impacts_mc:
-        for y_ in agg_impacts_mc[s_]:
+        for y_ in sorted(list(agg_impacts_mc[s_])):
             agg_impacts_mc[s_][y_] = pd.DataFrame.from_dict(agg_impacts_mc[s_][y_])
             agg_impacts_mc[s_][y_]['total'] \
                 = agg_impacts_mc[s_][y_][list(agg_impacts_mc[s_][y_].columns)].sum(axis=1)
@@ -32,7 +32,7 @@ def plot_impacts_heat(agg_impacts_mc, unit, uncertainty=True, color=None):
             minimums[rcps[
                 s_]] = pd.DataFrame()  # dataframe containing the 5th percentile realization for the different exposures
 
-            for y_ in agg_impacts_mc[s_]:
+            for y_ in sorted(list(agg_impacts_mc[s_])):
                 median[rcps[s_]][y_] = ((agg_impacts_mc[s_][y_].iloc[:, 0:-1]).median())  # don't need the total here
                 maximums[rcps[s_]][y_] = ((agg_impacts_mc[s_][y_].iloc[:, 0:-1]).quantile(0.95))
                 minimums[rcps[s_]][y_] = ((agg_impacts_mc[s_][y_].iloc[:, 0:-1]).quantile(0.05))
@@ -48,7 +48,7 @@ def plot_impacts_heat(agg_impacts_mc, unit, uncertainty=True, color=None):
     else:
         for s_ in agg_impacts_mc:
             median[rcps[s_]] = pd.DataFrame()  # dataframe containing the median realization for the different exposures
-            for y_ in agg_impacts_mc[s_]:
+            for y_ in sorted(list(agg_impacts_mc[s_])):
                 median[rcps[s_]][y_] = ((agg_impacts_mc[s_][y_].iloc[:, 0:-1]).median())  # don't need the total here
             median[rcps[s_]] = median[rcps[s_]].transpose()
 

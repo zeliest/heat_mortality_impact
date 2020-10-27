@@ -10,7 +10,7 @@ from climada.entity import Exposures
 from scipy.sparse import csr_matrix
 
 
-def plot_impacts_heat(agg_impacts_mc, unit, uncertainty=True, color=None, reference_year=2020):
+def plot_impacts_heat(agg_impacts_mc, unit, uncertainty=True, color=None):
     # Add a column to each dataframe with the sum of all exposures for each monte carlo.
     for s_ in agg_impacts_mc:
         for y_ in agg_impacts_mc[s_]:

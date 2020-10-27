@@ -63,7 +63,7 @@ class ImpactsHeatProductivity:
     # def impact_matrix_to_geotiff(self):
 
     def median_matrices_as_impacts(self, exposures, unit=None, percentage=False, canton=None):
-        impacts_dict = {scenario: {year: {category: self._median_matrix_as_impact
+        impacts_dict = {scenario: {year: {category: self.median_matrix_as_impact
         (self.median_impact_matrices[scenario][year][category],
          exposures[category], unit=unit, percentage=percentage, canton=canton)
                                           for category in exposures} for year in self.years} for scenario in
@@ -71,7 +71,7 @@ class ImpactsHeatProductivity:
         return impacts_dict
 
     @staticmethod
-    def _median_matrix_as_impact(impact_matrix, exposures, unit=None, percentage=False, canton=None):
+    def median_matrix_as_impact(impact_matrix, exposures, unit=None, percentage=False, canton=None):
         impact = Impact()
         if canton:
             canton_data = exposures['canton'] == canton
@@ -106,8 +106,8 @@ class ImpactsHeatProductivity:
 
     @staticmethod
     def compute_relative_change(matrix, matrix_ref):
-        matrix_rel = ((matrix - matrix_ref) / matrix_ref)*100
-        return matrix_rel
+        matrix_rel = (np.nan_to_num((matrix.toarray() - matrix_ref.toarray())/matrix_ref.toarray()))*100
+        return csr_matrix(matrix_rel)
 
 
 class ImpactsHeatMortality(ImpactsHeatProductivity):
@@ -177,4 +177,3 @@ class ImpactHeatMortality(Impact):
         value = {t: np.multiply(exposure_values, imp_fun.calc_mdr(t) - 1) for t in temperatures}
         af = {t: np.divide(value[t], value[t] + 1) for t in temperatures}
         return np.sum(af[t] * occurence[t] * average_death for t in temperatures)
-

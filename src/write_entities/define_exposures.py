@@ -9,13 +9,13 @@ def call_exposures_switzerland(file_info, file_locations, shp_cantons, epsg_inpu
     exposures = Exposures()
     population_info = pd.read_csv(file_info)  # file containing the information on the categories
     population_loc = pd.read_csv(file_locations)
-    categories = np.unique(population_info['Category'])
+    categories = np.unique(population_info['category'])
     exposures['latitude'] = np.concatenate([np.asarray(population_loc['N_KOORD']).flatten() for cat in categories])
     exposures['longitude'] = np.concatenate([np.asarray(population_loc['E_KOORD']).flatten() for cat in categories])
     exposures['if_heat'] = np.concatenate([np.ones(len(population_loc))*(n+1) for n in range(len(categories))])
     exposures['category'] = np.concatenate([[categories[c]
                                              for n in range(len(population_loc))] for c in range(len(categories))])
-    categories_code = {cat: population_info['GIS_Data_code'][population_info['Category'] == cat] for cat in categories}
+    categories_code = {cat: population_info['GIS_Data_code'][population_info['category'] == cat] for cat in categories}
     exposures['value'] = np.concatenate([np.asarray(population_loc[categories_code[cat]]).sum(axis=1) for cat in categories])
     exposures.crs = {'init': ''.join(['epsg:', str(epsg_input)])}  # crs: Coordinate Reference Systems
     exposures.set_geometry_points()
@@ -34,6 +34,7 @@ def add_average_deaths(exposures, average_deaths):
 def call_exposures_switzerland_mortality(file_info, file_locations, shp_cantons, annual_deaths, epsg_input=2056, epsg_output=4326,
                                          population_ratio=True, save=False):
     exposures = call_exposures_switzerland(file_info, file_locations, shp_cantons, epsg_input, epsg_output)
+    annual_deaths = pd.read_excel(annual_deaths)
     total_population_canton = exposures[['canton', 'category', 'value']]. \
         groupby(['canton', 'category'], as_index=False).sum(numeric_only=True)
     total_population_canton = total_population_canton.rename(columns={'value': 'total_population_canton'})
@@ -43,10 +44,11 @@ def call_exposures_switzerland_mortality(file_info, file_locations, shp_cantons,
     exposures = add_average_deaths(exposures, annual_deaths)
 
     if save:
+        categories_code = {'Over 75': 'O', 'Under 75': 'U'}
         for c in exposures['category'].unique():
             exposures_category = Exposures(exposures[exposures['category'] == c])
             exposures_category.check()
-            exposures_category.write_hdf5(''.join(['../../input_data/exposures/exposures_mortality_ch_',c,'.h5']))
+            exposures_category.write_hdf5(''.join(['../../input_data/exposures/exposures_mortality_ch_', categories_code[c], '.h5']))
 
     return exposures
 

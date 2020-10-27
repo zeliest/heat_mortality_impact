@@ -28,8 +28,8 @@ shp_dir = '../../input_data/shapefiles/KANTONS_projected_epsg4326/'
 file_cantons = ''.join([shp_dir, 'swissBOUNDARIES3D_1_3_TLM_KANTONSGEBIET_epsg4326.shp'])
 #exposures = call_exposures_switzerland_mortality(file_info, file_locations, file_cantons, annual_deaths, save=True)
 exposures = {}
-for category in ['O', 'U']:
-    exposures_file = ''.join([directory_exposures, 'exposures_mortality_ch_',category,'.h5'])
+for code, category in {'O': 'Over 75', 'U': 'Under 75'}.items():
+    exposures_file = ''.join([directory_exposures, 'exposures_mortality_ch_', code, '.h5'])
     exposures[category] = Exposures()
     exposures[category].read_hdf5(exposures_file)
     exposures[category] = exposures[category][exposures[category]['canton'] == 'Zürich']

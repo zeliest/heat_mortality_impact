@@ -34,6 +34,7 @@ def add_average_deaths(exposures, average_deaths):
 def call_exposures_switzerland_mortality(file_info, file_locations, shp_cantons, annual_deaths, epsg_input=2056, epsg_output=4326,
                                          population_ratio=True, save=False):
     exposures = call_exposures_switzerland(file_info, file_locations, shp_cantons, epsg_input, epsg_output)
+    annual_deaths = pd.read_excel(annual_deaths)
     total_population_canton = exposures[['canton', 'category', 'value']]. \
         groupby(['canton', 'category'], as_index=False).sum(numeric_only=True)
     total_population_canton = total_population_canton.rename(columns={'value': 'total_population_canton'})
@@ -43,10 +44,11 @@ def call_exposures_switzerland_mortality(file_info, file_locations, shp_cantons,
     exposures = add_average_deaths(exposures, annual_deaths)
 
     if save:
+        categories_code = {'Over 75': 'O', 'Under 75': 'U'}
         for c in exposures['category'].unique():
             exposures_category = Exposures(exposures[exposures['category'] == c])
             exposures_category.check()
-            exposures_category.write_hdf5(''.join(['../../input_data/exposures/exposures_mortality_ch_', c, '.h5']))
+            exposures_category.write_hdf5(''.join(['../../input_data/exposures/exposures_mortality_ch_', categories_code[c], '.h5']))
 
     return exposures
 

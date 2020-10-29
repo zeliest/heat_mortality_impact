@@ -1,6 +1,7 @@
 import pickle
 
 import numpy as np
+import palettable
 from climada.engine import Impact
 from climada.entity import Exposures
 from joblib import Parallel, delayed
@@ -63,7 +64,7 @@ class ImpactsHeatProductivity:
     # def impact_matrix_to_geotiff(self):
 
     def median_matrices_as_impacts(self, exposures, unit=None, percentage=False, canton=None):
-        impacts_dict = {scenario: {year: {category: self.median_matrix_as_impact
+        impacts_dict = {scenario: {year: {category: self.matrix_as_impact
         (self.median_impact_matrices[scenario][year][category],
          exposures[category], unit=unit, percentage=percentage, canton=canton)
                                           for category in exposures} for year in self.years} for scenario in
@@ -71,7 +72,7 @@ class ImpactsHeatProductivity:
         return impacts_dict
 
     @staticmethod
-    def median_matrix_as_impact(impact_matrix, exposures, unit=None, percentage=False, canton=None):
+    def matrix_as_impact(impact_matrix, exposures, unit=None, percentage=False, canton=None):
         impact = Impact()
         if canton:
             canton_data = exposures['canton'] == canton
@@ -184,3 +185,4 @@ class ImpactHeatMortality(Impact):
         value = {t: np.multiply(exposure_values, imp_fun.calc_mdr(t) - 1) for t in temperatures}
         af = {t: np.divide(value[t], value[t] + 1) for t in temperatures}
         return np.sum(af[t] * occurence[t] * average_death for t in temperatures)
+

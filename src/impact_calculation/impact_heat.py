@@ -14,13 +14,14 @@ from src.write_entities.define_hazard import call_hazard
 from src.write_entities.define_if import call_impact_functions
 
 
-class ImpactsHeatProductivity:
+class ImpactsHeat:
     def __init__(self, scenarios, years, n_mc):
         self.scenarios = scenarios
         self.years = years
         self.n_mc = n_mc
         self.agg_impacts_mc = dict()
         self.median_impact_matrices = dict()
+        self.unit = ''
 
     def calculate_impact(self, scenario, year, exposures, directory_hazard, nyears_hazards, crs_exposures=4326):
         hazard = call_hazard(directory_hazard, scenario, year, nyears_hazards)
@@ -85,7 +86,7 @@ class ImpactsHeatProductivity:
         else:
             impact.imp_mat = impact_matrix
         if percentage:
-            impact.imp_mat = csr_matrix((csr_matrix(impact_matrix).toarray()[0, :]
+            impact.imp_mat = csr_matrix((impact_matrix.toarray()[0, :]
                                          / exposures.value.replace(0,
                                                                    1)) * 100)  # put impacts in terms of percentage of exposure
         impact.unit = unit
@@ -108,19 +109,43 @@ class ImpactsHeatProductivity:
     def append_years(self, impacts):
         for year in impacts.years:
             for scenario in impacts.scenarios:
-                self.median_impact_matrices[scenario][year] = impacts.median_impact_matrices[scenario][year]
+                if len(impacts.median_impact_matrices) & len(self.median_impact_matrices):
+                    self.median_impact_matrices[scenario][year] = impacts.median_impact_matrices[scenario][year]
+                else:
+                    self.median_impact_matrices = {}
                 self.agg_impacts_mc[scenario][year] = impacts.agg_impacts_mc[scenario][year]
         self.years = sorted(self.years + impacts.years)
 
     @staticmethod
     def compute_relative_change(matrix, matrix_ref):
-        matrix_rel = (np.nan_to_num((matrix.toarray() - matrix_ref.toarray())/matrix_ref.toarray()))*100
+        matrix_rel = (np.nan_to_num((matrix.toarray() - matrix_ref.toarray()) / matrix_ref.toarray())) * 100
         return csr_matrix(matrix_rel)
 
 
-class ImpactsHeatMortality(ImpactsHeatProductivity):
+class ImpactsHeatProductivity(ImpactsHeat):
     def __init__(self, scenarios, years, n_mc):
         super().__init__(scenarios, years, n_mc)
+        self.categories = ['outside high physical activity','outside moderate physical activity',
+                           'inside moderate physical activity', 'inside low physical activity']
+        self.unit = 'CHF'
+
+    def costs_in_millions(self):
+        self.agg_impacts_mc = {scenario: {year: {category: (self.agg_impacts_mc[scenario][year][category]) / 1000000
+                                                 for category in self.categories} for year in self.years} for scenario
+                               in self.scenarios}
+        if len(self.median_impact_matrices):
+            self.median_impact_matrices = \
+                {scenario: {year: {category: (self.median_impact_matrices[scenario][year][category]) / 1000000
+                                   for category in self.categories} for year in self.years} for scenario
+                 in self.scenarios}
+        self.units = 'Millions of CHF'
+
+
+class ImpactsHeatMortality(ImpactsHeat):
+    def __init__(self, scenarios, years, n_mc):
+        super().__init__(scenarios, years, n_mc)
+        self.unit = 'Annual Heat Related Death (#)'
+        self.categories = ['Under 75', 'Over 75']
 
     def calculate_impact(self, scenario, year, exposures, directory_hazard, nyears_hazards, crs_exposures=4326):
         exposures = Exposures(exposures)

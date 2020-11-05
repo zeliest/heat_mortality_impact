@@ -1,0 +1,86 @@
+﻿GIS_Data_code,Department,Occupation_category,Indoor/Outdoor,Workplace,category,Month salary (CHF/month),Hourly salary (CHF/h)
+B170801VZA,"Landwirtschaft, Jagd und damit verbundene Tätigkeiten",H ,O,D,outside high physical activity,4240,26.5
+B170802VZA,Forstwirtschaft und Holzeinschlag,H ,O,D,outside high physical activity,7203,45.01875
+B170803VZA,Fischerei und Aquakultur,H ,O,D,outside high physical activity,#N/A,#N/A
+B170805VZA,Kohlenbergbau,H ,O,D,outside high physical activity,6640,41.5
+B170806VZA,Gewinnung von Erdöl und Erdgas,H,O,D,outside high physical activity,6640,41.5
+B170807VZA,Erzbergbau,H ,O,D,outside high physical activity,6640,41.5
+B170808VZA,"Gewinnung von Steinen und Erden, sonstiger Bergbau",H ,O,D,outside high physical activity,6640,41.5
+B170809VZA,Erbringung von Dienstleistungen für den Bergbau und für die Gewinnung von Steinen und Erden,H ,O,D,outside high physical activity,#N/A,#N/A
+B170810VZA,Herstellung von Nahrungs- und Futtermitteln,M ,I,S,inside moderate physical activity,5852,36.575
+B170811VZA,Getränkeherstellung,M ,I,S,inside moderate physical activity,6942,43.3875
+B170812VZA,Tabakverarbeitung,M ,I,S,inside moderate physical activity,11990,74.9375
+B170813VZA,Herstellung von Textilien,M ,I,S,inside moderate physical activity,5925,37.03125
+B170814VZA,Herstellung von Bekleidung,M ,I,S,inside moderate physical activity,5314,33.2125
+B170815VZA,"Herstellung von Leder, Lederwaren und Schuhen",M ,I,S,inside moderate physical activity,5203,32.51875
+B170816VZA,"Herstellung von Holz-, Flecht-, Korb- und Korkwaren (ohne Möbel)",M ,I,S,inside moderate physical activity,6237,38.98125
+B170817VZA,"Herstellung von Papier, Pappe und Waren daraus",M ,I,S,inside moderate physical activity,6662,41.6375
+B170818VZA,"Herstellung von Druckerzeugnissen; Vervielfältigung von bespielten Ton-, Bild- und Datenträgern",M ,I,S,inside moderate physical activity,6481,40.50625
+B170819VZA,Kokerei und Mineralölverarbeitung,M ,I,S,inside moderate physical activity,7893,49.33125
+B170820VZA,Herstellung von chemischen Erzeugnissen,M ,I,S,inside moderate physical activity,8700,54.375
+B170821VZA,Herstellung von pharmazeutischen Erzeugnissen,M ,I,S,inside moderate physical activity,11370,71.0625
+B170822VZA,Herstellung von Gummi- und Kunststoffwaren,M ,I,S,inside moderate physical activity,6406,40.0375
+B170823VZA,"Herstellung von Glas und Glaswaren, Keramik, Verarbeitung von Steinen und Erden",M ,I,S,inside moderate physical activity,6717,41.98125
+B170824VZA,Metallerzeugung und -bearbeitung,M ,I,S,inside moderate physical activity,6491,40.56875
+B170825VZA,Herstellung von Metallerzeugnissen,M ,I,S,inside moderate physical activity,6436,40.225
+B170826VZA,"Herstellung von Datenverarbeitungsgeräten, elektronischen und optischen Erzeugnissen",M ,I,S,inside moderate physical activity,7655,47.84375
+B170827VZA,Herstellung von elektrischen Ausrüstungen,M ,I,S,inside moderate physical activity,7409,46.30625
+B170828VZA,Maschinenbau,M ,I,S,inside moderate physical activity,7452,46.575
+B170829VZA,Herstellung von Automobilen und Automobilteilen,M ,I,S,inside moderate physical activity,6346,39.6625
+B170830VZA,Sonstiger Fahrzeugbau,M ,I,S,inside moderate physical activity,7514,46.9625
+B170831VZA,Herstellung von Möbeln,M ,I,S,inside moderate physical activity,6377,39.85625
+B170832VZA,Herstellung von sonstigen Waren,M ,I,S,inside moderate physical activity,6937,43.35625
+B170833VZA,Reparatur und Installation von Maschinen und Ausrüstungen,M ,I,D,inside moderate physical activity,6984,43.65
+B170835VZA,Energieversorgung,M ,O,S/D,outside moderate physical activity,8910,55.6875
+B170836VZA,Wasserversorgung,M ,O,S/D,outside moderate physical activity,7429,46.43125
+B170837VZA,Abwasserentsorgung,M ,O,S/D,outside moderate physical activity,6657,41.60625
+B170838VZA,"Sammlung, Behandlung und Beseitigung von Abfällen; Rückgewinnung",M ,O,D,outside moderate physical activity,6473,40.45625
+B170839VZA,Beseitigung von Umweltverschmutzungen und sonstige Entsorgung,M ,O,D,outside moderate physical activity,#N/A,#N/A
+B170841VZA,Hochbau,H,O,D,outside high physical activity,6847,42.79375
+B170842VZA,Tiefbau,H,O,D,outside high physical activity,7025,43.90625
+B170843VZA,"Vorbereitende Baustellenarbeiten, Bauinstallation und sonstiges Ausbaugewerbe",H,O,D,outside high physical activity,6383,39.89375
+B170845VZA,Handel mit Motorfahrzeugen; Instandhaltung und Reparatur von Motorfahrzeugen,M,I,S,inside moderate physical activity,6380,39.875
+B170846VZA,Grosshandel (ohne Handel mit Motorfahrzeugen),M,I,S,inside moderate physical activity,8521,53.25625
+B170847VZA,Detailhandel (ohne Handel mit Motorfahrzeugen),M,I,S,inside moderate physical activity,5372,33.575
+B170849VZA,Landverkehr und Transport in Rohrfernleitungen,M,O,D,outside moderate physical activity,6742,42.1375
+B170850VZA,Schifffahrt,M,I,D,inside moderate physical activity,6447,40.29375
+B170851VZA,Luftfahrt,M,I,D,inside moderate physical activity,7498,46.8625
+B170852VZA,Lagerei sowie Erbringung von sonstigen Dienstleistungen für den Verkehr,M,I,S,inside moderate physical activity,7273,45.45625
+B170853VZA,"Post-, Kurier- und Expressdienste",M,O,S/D,outside moderate physical activity,6263,39.14375
+B170855VZA,Beherbergung,M,I,S,inside moderate physical activity,4706,29.4125
+B170856VZA,Gastronomie,M,I,S,inside moderate physical activity,4616,28.85
+B170858VZA,Verlagswesen,L,I,S,inside low physical activity,8026,50.1625
+B170859VZA,"Herstellung, Verleih und Vertrieb von Filmen und Fernsehprogrammen; Kinos; Tonstudios und Verlegen von Musik",L,I,S,inside low physical activity,6793,42.45625
+B170860VZA,Rundfunkveranstalter,L,I,S,inside low physical activity,8597,53.73125
+B170861VZA,Telekommunikation,L,I,S,inside low physical activity,9503,59.39375
+B170862VZA,Erbringung von Dienstleistungen der Informationstechnologie,L,I,S,inside low physical activity,9604,60.025
+B170863VZA,Informationsdienstleistungen,L,I,S,inside low physical activity,13869,86.68125
+B170864VZA,Erbringung von Finanzdienstleistungen,L,I,S,inside low physical activity,11699,73.11875
+B170865VZA,"Versicherungen, Rückversicherungen und Pensionskassen (ohne Sozialversicherung)",L,I,S,inside low physical activity,10259,64.11875
+B170866VZA,Mit Finanz- und Versicherungsdienstleistungen verbundene Tätigkeiten,L,I,S,inside low physical activity,10817,67.60625
+B170868VZA,Grundstücks- und Wohnungswesen,L,I,S,inside low physical activity,7576,47.35
+B170869VZA,"Rechts- und Steuerberatung, Wirtschaftsprüfung",L,I,S,inside low physical activity,9060,56.625
+B170870VZA,Verwaltung und Führung von Unternehmen und Betrieben; Unternehmensberatung,L,I,S,inside low physical activity,12001,75.00625
+B170871VZA,"Architektur- und Ingenieurbüros; technische, physikalische und chemische Untersuchung",L,I,S,inside low physical activity,7872,49.2
+B170872VZA,Forschung und Entwicklung,L,I,S,inside low physical activity,11251,70.31875
+B170873VZA,Werbung und Marktforschung,L,I,S,inside low physical activity,7822,48.8875
+B170874VZA,"Sonstige freiberufliche, wissenschaftliche und technische Tätigkeiten",L,I,S,inside low physical activity,8018,50.1125
+B170875VZA,Veterinärwesen,L,I,S,inside low physical activity,6677,41.73125
+B170877VZA,Vermietung von beweglichen Sachen,L,I,S,inside low physical activity,6751,42.19375
+B170878VZA,Vermittlung und Überlassung von Arbeitskräften,L,I,S,inside low physical activity,6044,37.775
+B170879VZA,"Reisebüros, Reiseveranstalter und Erbringung sonstiger Reservierungsdienstleistungen",L,I,S,inside low physical activity,6399,39.99375
+B170880VZA,Wach- und Sicherheitsdienste sowie Detekteien,L,I,S/D,inside low physical activity,5730,35.8125
+B170881VZA,Gebäudebetreuung; Garten- und Landschaftsbau,H,O,D,outside high physical activity,5661,35.38125
+B170882VZA,Erbringung von wirtschaftlichen Dienstleistungen für Unternehmen und Privatpersonen a. n. g.,L,I,S,inside low physical activity,6844,42.775
+B170884VZA,"Öffentliche Verwaltung, Verteidigung; Sozialversicherung",L,I,S,inside low physical activity,8587,53.66875
+B170885VZA,Erziehung und Unterricht,L,I,S,inside low physical activity,8840,55.25
+B170886VZA,Gesundheitswesen,L,I,S,inside low physical activity,7435,46.46875
+B170887VZA,Heime (ohne Erholungs- und Ferienheime),L,I,S,inside low physical activity,6190,38.6875
+B170888VZA,Sozialwesen (ohne Heime),L,I,S,inside low physical activity,6661,41.63125
+B170890VZA,"Kreative, künstlerische und unterhaltende Tätigkeiten",L,I,S,inside low physical activity,6713,41.95625
+B170891VZA,"Bibliotheken, Archive, Museen, botanische und zoologische Gärten",L,I,S,inside low physical activity,7465,46.65625
+B170892VZA,"Spiel-, Wett- und Lotteriewesen",L,I,S,inside low physical activity,5826,36.4125
+B170893VZA,"Erbringung von Dienstleistungen des Sports, der Unterhaltung und der Erholung",L,O,S,outside low physical activity,6823,42.64375
+B170894VZA,Interessenvertretungen sowie kirchliche und sonstige religiöse Vereinigungen (ohne Sozialwesen und Sport),L,I,S,inside low physical activity,7845,49.03125
+B170895VZA,Reparatur von Datenverarbeitungsgeräten und Gebrauchsgütern,L,I,S,inside low physical activity,6009,37.55625
+B170896VZA,Erbringung von sonstigen überwiegend persönlichen Dienstleistungen,L,I,S,inside low physical activity,4606,28.7875

@@ -57,7 +57,6 @@ def plot_impacts_heat(agg_impacts_mc, unit, uncertainty=True, color=None):
     plt.ylabel(unit)
     ax.ticklabel_format(style='plain')
 
-
 def plot_clustered_stacked(dataframe_dict, title="multiple stacked bar plot", H="/", **kwargs):
     """Given a dict of dataframes, with identical columns and index, create a clustered stacked bar plot.
 labels is a list of the names of the dataframe, used for the legend
@@ -152,6 +151,5 @@ partly copied from: https://stackoverflow.com/questions/22787209/how-to-have-clu
             # ax.legend(h[:lc], l[:lc], loc=[1.01, 0.5])
             # ax.add_artist(l2)
         median[s_].columns = labels_graph
-
     return ax
 

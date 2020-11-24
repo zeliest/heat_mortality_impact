@@ -5,7 +5,7 @@ import geopandas as gpd
 from shapely.geometry import Point
 
 
-def call_exposures_switzerland(population_info, population_loc, shp_cantons, epsg_input, epsg_output):
+def call_exposures_switzerland(population_info, population_loc, shp_cantons_file, epsg_input, epsg_output):
     exposures = Exposures()
     categories = np.unique(population_info['category'])
     exposures['latitude'] = np.concatenate([np.asarray(population_loc['N_KOORD']).flatten() for cat in categories])
@@ -19,29 +19,37 @@ def call_exposures_switzerland(population_info, population_loc, shp_cantons, eps
     exposures.set_geometry_points()
     exposures.fillna(0)
     exposures.to_crs(epsg=epsg_output, inplace=True)
-    exposures = add_cantons(exposures, shp_cantons)
+    exposures = add_cantons(exposures, shp_cantons_file)
     return exposures
 
 
-def add_average_deaths(exposures, average_deaths):
+def add_average_deaths(exposures, annual_deaths_file, cantonal_average_deaths):
+    average_deaths = pd.read_excel(annual_deaths_file)
     average_deaths['daily_deaths'] = average_deaths['annual_deaths']/365
-    exposures = pd.merge(exposures, average_deaths[['canton', 'category', 'daily_deaths']], on=['canton', 'category'])
+    if cantonal_average_deaths:
+        exposures = pd.merge(exposures, average_deaths[['canton', 'category', 'daily_deaths']], on=['canton', 'category'])
+    else:
+        exposures['daily_deaths'] = np.zeros(len(exposures['value']))
+        for category in exposures['category'].unique():
+            exposures[exposures['category'] == category]['daily_deaths'] = average_deaths[(average_deaths['canton'] == 'CH') & (average_deaths['category']==category)]['daily_deaths'].values[0]
     return exposures
 
 
-def call_exposures_switzerland_mortality(file_info, file_locations, shp_cantons, annual_deaths, epsg_input=2056, epsg_output=4326,
-                                         population_ratio=True, save=False):
+def call_exposures_switzerland_mortality(file_info, file_locations, shp_cantons, annual_deaths_file, epsg_input=2056, epsg_output=4326,
+                                         population_ratio=True, save=False, cantonal_average_deaths=False):
     population_info = pd.read_csv(file_info)  # file containing the information on the categories
     population_loc = pd.read_csv(file_locations)
     exposures = call_exposures_switzerland(population_info, population_loc, shp_cantons, epsg_input, epsg_output)
-    annual_deaths = pd.read_excel(annual_deaths)
-    total_population_canton = exposures[['canton', 'category', 'value']]. \
-        groupby(['canton', 'category'], as_index=False).sum(numeric_only=True)
-    total_population_canton = total_population_canton.rename(columns={'value': 'total_population_canton'})
-    exposures = exposures.merge(total_population_canton, on=['canton', 'category'])
+    if cantonal_average_deaths is True:
+        total_population_canton = exposures[['canton', 'category', 'value']]. \
+            groupby(['canton', 'category'], as_index=False).sum(numeric_only=True)
+        total_population_canton = total_population_canton.rename(columns={'value': 'total_population_canton'})
+        exposures = exposures.merge(total_population_canton, on=['canton', 'category'])
+    else:
+        exposures['total_population_canton'] = exposures['value'].sum()
     if population_ratio:
         exposures['value'] = exposures['value'].divide(exposures['total_population_canton'])
-    exposures = add_average_deaths(exposures, annual_deaths)
+    exposures = add_average_deaths(exposures, annual_deaths_file, cantonal_average_deaths)
 
     if save:
         categories_code = {'Over 75': 'O', 'Under 75': 'U'}
@@ -74,16 +82,8 @@ def call_exposures_switzerland_productivity(file_info, file_locations, shp_canto
     return exposures
 
 
-def add_cantons(vector, shp_dir): # this is used for the exposures, but is
+def add_cantons(vector, shp_cantons_file): # this is used for the exposures, but is
     # quite slow (not a big problem in the monte carlo as the exposures are called only once)
-    regions = gpd.read_file(shp_dir)
+    regions = gpd.read_file(shp_cantons_file)
     vector = gpd.sjoin(vector, regions[['NAME', 'geometry']], how='left', op='intersects')
     return vector.rename(columns={'NAME': 'canton'})
-
-
-file_info = '../../input_data/exposures/work_intensity.csv'
-file_locations = '../../input_data/exposures/lv95_vollzeitequivalente.csv'
-shp_cantons = '../../input_data/shapefiles/KANTONS_projected_epsg4326/swissBOUNDARIES3D_1_3_TLM_KANTONSGEBIET_epsg4326.shp'
-
-
-call_exposures_switzerland_productivity(file_info, file_locations, shp_cantons)

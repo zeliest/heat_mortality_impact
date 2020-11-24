@@ -1,5 +1,5 @@
 import pickle
-
+import pandas as pd
 import numpy as np
 import palettable
 from climada.engine import Impact
@@ -64,13 +64,57 @@ class ImpactsHeat:
 
     # def impact_matrix_to_geotiff(self):
 
-    def median_matrices_as_impacts(self, exposures, unit=None, percentage=False, canton=None):
+    def median_matrices_as_impacts(self, exposures, unit=None, percentage=False, canton=None, as_exp=False):
         impacts_dict = {scenario: {year: {category: self.matrix_as_impact
         (self.median_impact_matrices[scenario][year][category],
          exposures[category], unit=unit, percentage=percentage, canton=canton)
                                           for category in exposures} for year in self.years} for scenario in
                         self.scenarios}
         return impacts_dict
+
+    @staticmethod
+    def cantonal_values_table(median_impact_matrix, exposures):
+        median_impact_exp = median_impact_matrix._build_exp_event(event_id=0)
+        median_impact_exp = pd.merge(median_impact_exp, exposures[['canton', 'latitude', 'longitude']],
+                                     on=['latitude', 'longitude'], how='left')
+        median_impact_exp = median_impact_exp[['canton', 'value']]
+        median_impact_exp = median_impact_exp.groupby('canton').sum()
+        return median_impact_exp
+
+    def cantonal_impacts_df(self, exposures, scenarios=all, years=all, categories=all, categories_short=None):
+        if scenarios == all:
+            scenarios = self.scenarios
+        if years == all:
+            years = self.years
+        if categories == all:
+            categories = list(exposures.keys())
+        if categories_short is None:
+            categories_short = {category: category for category in categories}
+
+        median_impact_matrices_dict = self.median_matrices_as_impacts(exposures)
+        cantonal_values_tables_dict = {scenario: {
+            year: {categories_short[category]: self.cantonal_values_table(median_impact_matrices_dict[scenario][year][category],
+                                                        exposures[category]) for category in
+                   categories} for year in years} for scenario in scenarios}
+
+        columns1 = []
+        columns2 = []
+        columns3 = []
+
+        rcps = {'RCP26': 'RCP2.6', 'RCP45': 'RCP4.5', 'RCP85': 'RCP8.5'}
+        data = []
+        for scenario in cantonal_values_tables_dict:
+            for year in cantonal_values_tables_dict[scenario]:
+                for category in categories:
+                    data.append(cantonal_values_tables_dict[scenario][year][categories_short[category]])
+                    columns1.append(rcps[scenario])
+                    columns2.append(year)
+                    columns3.append(categories_short[category])
+
+        cantonal_impacts_df = pd.concat(data, axis=1)
+        cantonal_impacts_df.columns = [columns1, columns2, columns3]
+        cantonal_impacts_df.loc["Total"] = cantonal_impacts_df.sum()
+        return cantonal_impacts_df
 
     @staticmethod
     def matrix_as_impact(impact_matrix, exposures, unit=None, percentage=False, canton=None):
@@ -92,10 +136,10 @@ class ImpactsHeat:
         impact.unit = unit
         return impact
 
-    def calculate_impact_agg_canton(self, canton, exposures):
+    def calculate_impact_agg_canton(self, canton, exposures, categories):
         impact = self.median_matrices_as_impacts(exposures, canton=canton)
         agg_impact = {scenario: {year: {category: [impact[scenario][year][category].imp_mat.sum()]
-                                        for category in exposures} for year in self.years} for scenario in
+                                        for category in categories} for year in self.years} for scenario in
                       self.scenarios}
         return agg_impact
 
@@ -125,7 +169,7 @@ class ImpactsHeat:
 class ImpactsHeatProductivity(ImpactsHeat):
     def __init__(self, scenarios, years, n_mc):
         super().__init__(scenarios, years, n_mc)
-        self.categories = ['outside high physical activity','outside moderate physical activity',
+        self.categories = ['outside high physical activity', 'outside moderate physical activity',
                            'inside moderate physical activity', 'inside low physical activity']
         self.unit = 'CHF'
 
@@ -210,4 +254,5 @@ class ImpactHeatMortality(Impact):
         value = {t: np.multiply(exposure_values, imp_fun.calc_mdr(t) - 1) for t in temperatures}
         af = {t: np.divide(value[t], value[t] + 1) for t in temperatures}
         return np.sum(af[t] * occurence[t] * average_death for t in temperatures)
+
 

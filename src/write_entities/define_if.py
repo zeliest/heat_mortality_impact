@@ -11,7 +11,6 @@ def truncated_normal(mean, stddev, minval, maxval):
 def polynomial(x, a, b, c, d):
     return a*x**3 + b*x**2 + c*x + d
 
-
 # function to get a random impact function:
 def impact_functions_random(file):
     """get curve for the impact function:
@@ -30,8 +29,8 @@ def impact_functions_random(file):
     xdata = data['T']
 
     #ydata = np.random.uniform(low=data['95CI_low'], high=data['95CI_high'])
-    #ydata = np.clip(np.random.normal(loc=data['best_estimate'], scale=1), data['95CI_low'], data['95CI_high'])
-    ydata = truncated_normal(data['best_estimate'], (data['95CI_high']-data['95CI_low']/3.92), data['95CI_low'], data['95CI_high'])
+    ydata = np.clip(np.random.normal(loc=data['best_estimate'], scale=1), data['95CI_low'], data['95CI_high'])
+    #ydata = truncated_normal(data['best_estimate'], (data['95CI_high']-data['95CI_low']/3.92), data['95CI_low'], data['95CI_high'])
 
     # set RR=1 up to T=22°C:
     ydata = np.append(ydata, [1, 1])

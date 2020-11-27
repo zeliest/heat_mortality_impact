@@ -49,10 +49,8 @@ class ImpactsHeat:
     def impacts_years_scenarios(self, exposures, directory_hazard, nyears_hazards, save_median_mat=True):
 
         impacts = {scenario: {year: {category: self.parallel_impact_calculation(scenario, year,
-                                                                                exposures[category], directory_hazard,
-                                                                                nyears_hazards, save_median_mat)
-                                     for category in exposures} for year in self.years}
-                   for scenario in self.scenarios}
+                                     exposures[category], directory_hazard, nyears_hazards, save_median_mat)
+                                     for category in exposures} for year in self.years} for scenario in self.scenarios}
         self.agg_impacts_mc = {scenario: {year: {category: impacts[scenario][year][category][0]
                                                  for category in exposures} for year in self.years} for scenario in
                                self.scenarios}

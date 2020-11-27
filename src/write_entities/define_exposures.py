@@ -31,12 +31,13 @@ def add_average_deaths(exposures, annual_deaths_file, cantonal_average_deaths):
     else:
         exposures['daily_deaths'] = np.zeros(len(exposures['value']))
         for category in exposures['category'].unique():
-            exposures[exposures['category'] == category]['daily_deaths'] = average_deaths[(average_deaths['canton'] == 'CH') & (average_deaths['category']==category)]['daily_deaths'].values[0]
+            exposures.loc[exposures['category'] == category, 'daily_deaths'] = \
+                average_deaths[(average_deaths['canton'] == 'CH') & (average_deaths['category']==category)]['daily_deaths'].values[0]
     return exposures
 
 
-def call_exposures_switzerland_mortality(file_info, file_locations, shp_cantons, annual_deaths_file, epsg_input=2056, epsg_output=4326,
-                                         population_ratio=True, save=False, cantonal_average_deaths=False):
+def call_exposures_switzerland_mortality(file_info, file_locations, shp_cantons, annual_deaths_file, epsg_input=2056,
+                                         epsg_output=4326, population_ratio=True, save=False, cantonal_average_deaths=True):
     population_info = pd.read_csv(file_info)  # file containing the information on the categories
     population_loc = pd.read_csv(file_locations)
     exposures = call_exposures_switzerland(population_info, population_loc, shp_cantons, epsg_input, epsg_output)
@@ -46,7 +47,9 @@ def call_exposures_switzerland_mortality(file_info, file_locations, shp_cantons,
         total_population_canton = total_population_canton.rename(columns={'value': 'total_population_canton'})
         exposures = exposures.merge(total_population_canton, on=['canton', 'category'])
     else:
-        exposures['total_population_canton'] = exposures['value'].sum()
+        exposures['total_population_canton'] = np.zeros(len(exposures))
+        for category in exposures['category'].unique():
+            exposures.loc[exposures['category'] == category, 'total_population_canton'] = exposures[exposures['category']==category]['value'].sum()
     if population_ratio:
         exposures['value'] = exposures['value'].divide(exposures['total_population_canton'])
     exposures = add_average_deaths(exposures, annual_deaths_file, cantonal_average_deaths)
@@ -56,7 +59,7 @@ def call_exposures_switzerland_mortality(file_info, file_locations, shp_cantons,
         for c in exposures['category'].unique():
             exposures_category = Exposures(exposures[exposures['category'] == c])
             exposures_category.check()
-            exposures_category.write_hdf5(''.join(['../../input_data/exposures/exposures_mortality_ch_', categories_code[c], '.h5']))
+            exposures_category.write_hdf5(''.join(['../../input_data/exposures/exposures_mortality_ch_', categories_code[c], '2.h5']))
 
     return exposures
 

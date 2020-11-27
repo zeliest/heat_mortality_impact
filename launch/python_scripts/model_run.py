@@ -33,13 +33,13 @@ else:
 exposures = {}
 directory_exposures = '../../input_data/exposures/'
 for code, category in {'O': 'Over 75', 'U': 'Under 75'}.items():
-    exposures_file = ''.join([directory_exposures, 'exposures_mortality_ch_', code, '.h5'])
+    exposures_file = ''.join([directory_exposures, 'exposures_mortality_ch_', code, '2.h5'])
     exposures[category] = Exposures()
     exposures[category].read_hdf5(exposures_file)
 
 impacts_mortality = ImpactsHeatMortality(scenarios, years, n_mc)
 impacts_mortality.impacts_years_scenarios(exposures, directory_hazard, nyears_hazards, save_median_mat=save_median_mat)
 
-with open(''.join([directory_output, 'impact_', str(n_mc), 'mc', '.pickle']), 'wb') as handle:
+with open(''.join([directory_output, 'impact_CH_values_', str(n_mc), 'mc', '.pickle']), 'wb') as handle:
     pickle.dump(impacts_mortality, handle, protocol=pickle.HIGHEST_PROTOCOL)
 

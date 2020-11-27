@@ -26,7 +26,8 @@ file_info = ''.join([directory_exposures, 'age_categories.csv'])
 file_locations = ''.join([directory_exposures, 'STATPOP2018.csv'])
 shp_dir = '../../input_data/shapefiles/KANTONS_projected_epsg4326/'
 file_cantons = ''.join([shp_dir, 'swissBOUNDARIES3D_1_3_TLM_KANTONSGEBIET_epsg4326.shp'])
-exposures = call_exposures_switzerland_mortality(file_info, file_locations, file_cantons, annual_deaths_file, save=True)
+#exposure = call_exposures_switzerland_mortality(file_info, file_locations, file_cantons, annual_deaths_file,
+#                                              cantonal_average_deaths=False, save=True)
 exposures = {}
 for code, category in {'O': 'Over 75', 'U': 'Under 75'}.items():
     exposures_file = ''.join([directory_exposures, 'exposures_mortality_ch_', code, '.h5'])

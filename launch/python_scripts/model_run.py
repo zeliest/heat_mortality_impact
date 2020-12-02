@@ -33,7 +33,7 @@ else:
 exposures = {}
 directory_exposures = '../../input_data/exposures/'
 for code, category in {'O': 'Over 75', 'U': 'Under 75'}.items():
-    exposures_file = ''.join([directory_exposures, 'exposures_mortality_ch_', code, '2.h5'])
+    exposures_file = ''.join([directory_exposures, 'exposures_mortality_ch_', code, '.h5'])
     exposures[category] = Exposures()
     exposures[category].read_hdf5(exposures_file)
 

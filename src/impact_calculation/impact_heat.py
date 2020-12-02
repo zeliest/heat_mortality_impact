@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 import palettable
 from climada.engine import Impact
-from climada.entity import Exposures
+from climada.entity import Exposures, sparse
 from joblib import Parallel, delayed
 from multiprocessing import cpu_count
 from climada.entity.exposures.base import INDICATOR_CENTR
@@ -194,13 +194,13 @@ class ImpactsHeatMortality(ImpactsHeat):
         exposures.check()
         hazard = call_hazard(directory_hazard, scenario, year, nyears_hazards)
         if_hw_set = call_impact_functions()
-        impact = ImpactHeatMortality()
+        impact = ImpactHeatMortality(exposures)
         impact.calc(exposures, if_hw_set, hazard, save_mat=True)
         return csr_matrix(impact.imp_mat.sum(axis=0))
 
 
 class ImpactHeatMortality(Impact):
-    def __init__(self):
+    def __init__(self,exposures):
         super().__init__()
         self._exp_impact = self._exp_impact_mortality
 
@@ -231,14 +231,15 @@ class ImpactHeatMortality(Impact):
         # get affected fractions
         # get exposure values
         exposure_values = exposures.value.values[exp_iimp]
-        daily_deaths = exposures.daily_deaths.values[exp_iimp]
+        tot_pop = exposures.total_population_canton.values[exp_iimp]
+        daily_deaths = exposures.daily_deaths.values[exp_iimp]*exposure_values
 
         max_temp = temperature_matrix.max()
-        expected_deaths = [daily_deaths / imp_fun.calc_mdr(value)
-                           for value in range(22, int(np.ceil(max_temp)) + 1)]
-        average_death = np.sum(np.multiply(exposure_values, expected_deaths[t]) for t in range(len(expected_deaths)))
+        expected_deaths = {t: daily_deaths / imp_fun.calc_mdr(t)
+                           for t in range(22, int(np.ceil(max_temp)) + 1)}
+        #average_death = np.sum(np.multiply(exposure_values, expected_deaths[t]) for t in range(len(expected_deaths)))
         # Compute impact matrix
-        self.imp_mat[:, exp_iimp] = self._impact_mortality(temperature_matrix, exposure_values, average_death,
+        self.imp_mat[0, exp_iimp] = self._impact_mortality(temperature_matrix, exposure_values, expected_deaths,
                                                            imp_fun)
 
     @staticmethod
@@ -249,8 +250,28 @@ class ImpactHeatMortality(Impact):
         occurence = np.apply_along_axis(np.bincount, axis=0, arr=temperature_array,
                                         minlength=np.max(temperature_array) + 1)
         occurence = {t: occurence[t] for t in range(22, len(occurence))}
-        value = {t: np.multiply(exposure_values, imp_fun.calc_mdr(t) - 1) for t in temperatures}
+        value = {t: np.multiply(1, imp_fun.calc_mdr(t) - 1) for t in temperatures}
         af = {t: np.divide(value[t], value[t] + 1) for t in temperatures}
-        return np.sum(af[t] * occurence[t] * average_death for t in temperatures)
+        return np.sum(af[t] * occurence[t] * average_death[t] for t in temperatures)
 
+
+def death_impact_test(pop, pop_tot, daily_deaths, t=25, occurence=10):
+    results = np.zeros(len(pop_tot))
+    af_all = np.zeros(len(pop_tot))
+    average_death_all = np.zeros([len(pop_tot)])
+
+    for n in range(len(pop_tot)):
+        imp_fun_set = call_impact_functions()
+        imp_fun = imp_fun_set.get_func('heat')[0]
+        exposure_values = pop/pop_tot[n]
+        max_temp = 35
+        expected_deaths = [daily_deaths[n] / imp_fun.calc_mdr(value)
+                           for value in range(22, int(np.ceil(max_temp)) + 1)]
+        average_death = np.sum(np.multiply(exposure_values, expected_deaths[t]) for t in range(len(expected_deaths)))
+        average_death_all[n] = average_death
+        value = np.multiply(exposure_values, imp_fun.calc_mdr(t) - 1)
+        af = np.divide(value, value + 1)
+        af_all[n] = af
+        results[n] = af * occurence * average_death
+    return results, af_all,average_death_all
 

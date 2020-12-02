@@ -59,7 +59,7 @@ def call_exposures_switzerland_mortality(file_info, file_locations, shp_cantons,
         for c in exposures['category'].unique():
             exposures_category = Exposures(exposures[exposures['category'] == c])
             exposures_category.check()
-            exposures_category.write_hdf5(''.join(['../../input_data/exposures/exposures_mortality_ch_', categories_code[c], '2.h5']))
+            exposures_category.write_hdf5(''.join(['../../input_data/exposures/exposures_mortality_ch_', categories_code[c], '.h5']))
 
     return exposures
 

@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 import palettable
 from climada.engine import Impact
-from climada.entity import Exposures, sparse
+from climada.entity import Exposures
 from joblib import Parallel, delayed
 from multiprocessing import cpu_count
 from climada.entity.exposures.base import INDICATOR_CENTR

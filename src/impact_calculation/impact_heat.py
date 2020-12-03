@@ -235,8 +235,8 @@ class ImpactHeatMortality(Impact):
         daily_deaths = exposures.daily_deaths.values[exp_iimp]*exposure_values
 
         max_temp = temperature_matrix.max()
-        expected_deaths = {t: daily_deaths / imp_fun.calc_mdr(t)
-                           for t in range(22, int(np.ceil(max_temp)) + 1)}
+        expected_deaths = np.mean([daily_deaths / imp_fun.calc_mdr(t)
+                           for t in range(22, int(np.ceil(max_temp)) + 1)])
         #average_death = np.sum(np.multiply(exposure_values, expected_deaths[t]) for t in range(len(expected_deaths)))
         # Compute impact matrix
         self.imp_mat[0, exp_iimp] = self._impact_mortality(temperature_matrix, exposure_values, expected_deaths,
@@ -252,7 +252,7 @@ class ImpactHeatMortality(Impact):
         occurence = {t: occurence[t] for t in range(22, len(occurence))}
         value = {t: np.multiply(1, imp_fun.calc_mdr(t) - 1) for t in temperatures}
         af = {t: np.divide(value[t], value[t] + 1) for t in temperatures}
-        return np.sum(af[t] * occurence[t] * average_death[t] for t in temperatures)
+        return np.sum(af[t] * occurence[t] * average_death for t in temperatures)
 
 
 def death_impact_test(pop, pop_tot, daily_deaths, t=25, occurence=10):

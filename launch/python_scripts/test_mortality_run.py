@@ -30,7 +30,7 @@ file_cantons = ''.join([shp_dir, 'swissBOUNDARIES3D_1_3_TLM_KANTONSGEBIET_epsg43
 #                                              cantonal_average_deaths=False, save=True)
 exposures = {}
 for code, category in {'O': 'Over 75', 'U': 'Under 75'}.items():
-    exposures_file = ''.join([directory_exposures, 'exposures_mortality_ch_', code, '.h5'])
+    exposures_file = ''.join([directory_exposures, 'exposures_mortality_ch_', code, '2.h5'])
     exposures[category] = Exposures()
     exposures[category].read_hdf5(exposures_file)
     exposures[category] = exposures[category][exposures[category]['canton'] == 'Zürich']

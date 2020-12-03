@@ -10,7 +10,7 @@ from climada.entity import Exposures
 from scipy.sparse import csr_matrix
 
 
-def plot_impacts_heat(agg_impacts_mc, unit, impact_type, uncertainty=True, color=None, labels_cat=None, save=False):
+def plot_impacts_heat(agg_impacts_mc, unit, impact_type, uncertainty=True, color=None, labels_cat=None, save=False, ratio=1):
     # Add a column to each dataframe with the sum of all exposures for each monte carlo.
     for s_ in agg_impacts_mc:
         for y_ in sorted(list(agg_impacts_mc[s_])):
@@ -33,9 +33,9 @@ def plot_impacts_heat(agg_impacts_mc, unit, impact_type, uncertainty=True, color
                 s_]] = pd.DataFrame()  # dataframe containing the 5th percentile realization for the different exposures
 
             for y_ in sorted(list(agg_impacts_mc[s_])):
-                median[rcps[s_]][str(y_)] = ((agg_impacts_mc[s_][y_]).median())  # don't need the total here
-                maximums[rcps[s_]][str(y_)] = ((agg_impacts_mc[s_][y_]).quantile(0.95))
-                minimums[rcps[s_]][str(y_)] = ((agg_impacts_mc[s_][y_]).quantile(0.05))
+                median[rcps[s_]][str(y_)] = ((agg_impacts_mc[s_][y_]).median())*ratio  # don't need the total here
+                maximums[rcps[s_]][str(y_)] = ((agg_impacts_mc[s_][y_]).quantile(0.95))*ratio
+                minimums[rcps[s_]][str(y_)] = ((agg_impacts_mc[s_][y_]).quantile(0.05))*ratio
 
             median[rcps[s_]] = median[rcps[s_]].transpose()
             maximums[rcps[s_]] = maximums[rcps[s_]].transpose()

@@ -43,6 +43,7 @@ def call_exposures_switzerland_mortality(file_info, file_locations, shp_cantons,
     population_loc = pd.read_csv(file_locations)
     exposures = call_exposures_switzerland(population_info, population_loc, shp_cantons, epsg_input, epsg_output)
     correction_factor_population = total_population_ch/exposures.value.sum()
+    exposures['value'] = exposures['value']*correction_factor_population
     if cantonal_average_deaths is True:
         total_population_canton = exposures[['canton', 'category', 'value']]. \
             groupby(['canton', 'category'], as_index=False).sum(numeric_only=True)
@@ -53,7 +54,7 @@ def call_exposures_switzerland_mortality(file_info, file_locations, shp_cantons,
         for category in exposures['category'].unique():
             exposures.loc[exposures['category'] == category, 'total_population_canton'] = exposures[exposures['category']==category]['value'].sum()
     if population_ratio:
-        exposures['value'] = exposures['value'].divide((exposures['total_population_canton']*correction_factor_population))
+        exposures['value'] = exposures['value'].divide((exposures['total_population_canton']))
     exposures = add_average_deaths(exposures, annual_deaths_file, cantonal_average_deaths)
 
     if save:

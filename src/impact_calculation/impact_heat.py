@@ -232,7 +232,6 @@ class ImpactHeatMortality(Impact):
         # get affected fractions
         # get exposure values
         exposure_values = exposures.value.values[exp_iimp]
-        tot_pop = exposures.total_population_canton.values[exp_iimp]
         daily_deaths = exposures.daily_deaths.values[exp_iimp]*exposure_values
 
         max_temp = temperature_matrix.max()

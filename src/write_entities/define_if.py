@@ -29,7 +29,7 @@ def impact_functions_random(file):
     xdata = data['T']
 
     #ydata = np.random.uniform(low=data['95CI_low'], high=data['95CI_high'])
-    ydata = np.clip(np.random.normal(loc=data['best_estimate'], scale=1), data['95CI_low']*0.9, data['95CI_high']*1.1)
+    ydata = np.clip(np.random.normal(loc=data['best_estimate'], scale=1), data['95CI_low'], data['95CI_high'])
     #ydata = truncated_normal(data['best_estimate'], (data['95CI_high']-data['95CI_low']/3.92), data['95CI_low'], data['95CI_high'])
 
     # set RR=1 up to T=22°C:

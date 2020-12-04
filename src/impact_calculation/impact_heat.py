@@ -90,6 +90,7 @@ class ImpactsHeat:
             categories_short = {category: category for category in categories}
 
         median_impact_matrices_dict = self.median_matrices_as_impacts(exposures)
+
         cantonal_values_tables_dict = {scenario: {
             year: {categories_short[category]: self.cantonal_values_table(median_impact_matrices_dict[scenario][year][category],
                                                         exposures[category]) for category in
@@ -272,5 +273,5 @@ def death_impact_test(pop, pop_tot, daily_deaths, t=25, occurence=10):
         af = np.divide(value, value + 1)
         af_all[n] = af
         results[n] = af * occurence * average_death
-    return results, af_all,average_death_all
+    return results, af_all, average_death_all
 

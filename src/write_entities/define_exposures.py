@@ -37,10 +37,12 @@ def add_average_deaths(exposures, annual_deaths_file, cantonal_average_deaths):
 
 
 def call_exposures_switzerland_mortality(file_info, file_locations, shp_cantons, annual_deaths_file, epsg_input=2056,
-                                         epsg_output=4326, population_ratio=True, save=False, cantonal_average_deaths=True):
+                                         epsg_output=4326, population_ratio=True, save=False,
+                                         cantonal_average_deaths=True, total_population_ch=8237700):
     population_info = pd.read_csv(file_info)  # file containing the information on the categories
     population_loc = pd.read_csv(file_locations)
     exposures = call_exposures_switzerland(population_info, population_loc, shp_cantons, epsg_input, epsg_output)
+    correction_factor_population = total_population_ch/exposures.value.sum()
     if cantonal_average_deaths is True:
         total_population_canton = exposures[['canton', 'category', 'value']]. \
             groupby(['canton', 'category'], as_index=False).sum(numeric_only=True)
@@ -51,7 +53,7 @@ def call_exposures_switzerland_mortality(file_info, file_locations, shp_cantons,
         for category in exposures['category'].unique():
             exposures.loc[exposures['category'] == category, 'total_population_canton'] = exposures[exposures['category']==category]['value'].sum()
     if population_ratio:
-        exposures['value'] = exposures['value'].divide(exposures['total_population_canton'])
+        exposures['value'] = exposures['value'].divide((exposures['total_population_canton']*correction_factor_population))
     exposures = add_average_deaths(exposures, annual_deaths_file, cantonal_average_deaths)
 
     if save:
@@ -59,7 +61,7 @@ def call_exposures_switzerland_mortality(file_info, file_locations, shp_cantons,
         for c in exposures['category'].unique():
             exposures_category = Exposures(exposures[exposures['category'] == c])
             exposures_category.check()
-            exposures_category.write_hdf5(''.join(['../../input_data/exposures/exposures_mortality_ch_', categories_code[c], '.h5']))
+            exposures_category.write_hdf5(''.join(['../../input_data/exposures/exposures_mortality_ch_', categories_code[c], '2.h5']))
 
     return exposures
 

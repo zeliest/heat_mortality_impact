@@ -33,6 +33,7 @@ def add_average_deaths(exposures, annual_deaths_file, cantonal_average_deaths):
         for category in exposures['category'].unique():
             exposures.loc[exposures['category'] == category, 'daily_deaths'] = \
                 average_deaths[(average_deaths['canton'] == 'CH') & (average_deaths['category']==category)]['daily_deaths'].values[0]
+
     return exposures
 
 

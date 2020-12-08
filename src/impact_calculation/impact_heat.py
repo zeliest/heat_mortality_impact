@@ -10,8 +10,8 @@ from climada.entity.exposures.base import INDICATOR_CENTR
 from scipy.sparse import vstack, csr_matrix
 
 from src.util.plots import plot_impacts_heat
-from src.write_entities.define_hazard import call_hazard
-from src.write_entities.define_if import call_impact_functions
+from src.write_entities.define_hazard import call_hazard_mortality, call_hazard_productivity
+from src.write_entities.define_if import call_impact_functions_mortality, call_impact_functions_productivity
 
 
 class ImpactsHeat:
@@ -23,20 +23,12 @@ class ImpactsHeat:
         self.median_impact_matrices = dict()
         self.unit = ''
 
-    def calculate_impact(self, scenario, year, exposures, directory_hazard, nyears_hazards, crs_exposures=4326):
-        hazard = call_hazard(directory_hazard, scenario, year, nyears_hazards)
-        if_hw_set = call_impact_functions()
-        impact = Impact()
-        exposures = Exposures(exposures)
-        exposures.crs = {'init': ''.join(['epsg:', str(crs_exposures)])}
-        impact.calc(exposures, if_hw_set, hazard, save_mat=True)
-        return csr_matrix(impact.imp_mat.sum(axis=0))
-
-    def parallel_impact_calculation(self, scenario, year, exposure, directory_hazard, nyears_hazards, save_median_mat):
+    def parallel_impact_calculation(self, scenario, year, exposure, directory_hazard, nyears_hazards, save_median_mat,
+                                    uncertainty_variable='all'):
         ncores_max = cpu_count()
         impacts = Parallel(n_jobs=ncores_max)(delayed(self.calculate_impact)
-                                              (scenario, year, exposure, directory_hazard, nyears_hazards)
-                                              for i in range(0, self.n_mc))
+                                              (scenario, year, exposure, directory_hazard, nyears_hazards,
+                                               uncertainty_variable) for i in range(0, self.n_mc))
 
         agg_impacts_mc = [np.sum(impacts[n]) for n in range(self.n_mc)]
         if save_median_mat:
@@ -46,10 +38,10 @@ class ImpactsHeat:
 
         return [agg_impacts_mc]
 
-    def impacts_years_scenarios(self, exposures, directory_hazard, nyears_hazards, save_median_mat=True):
+    def impacts_years_scenarios(self, exposures, directory_hazard, nyears_hazards, save_median_mat=True, uncertainty_variable='all'):
 
         impacts = {scenario: {year: {category: self.parallel_impact_calculation(scenario, year,
-                                     exposures[category], directory_hazard, nyears_hazards, save_median_mat)
+                                     exposures[category], directory_hazard, nyears_hazards, save_median_mat, uncertainty_variable)
                                      for category in exposures} for year in self.years} for scenario in self.scenarios}
         self.agg_impacts_mc = {scenario: {year: {category: impacts[scenario][year][category][0]
                                                  for category in exposures} for year in self.years} for scenario in
@@ -172,6 +164,21 @@ class ImpactsHeatProductivity(ImpactsHeat):
                            'inside moderate physical activity', 'inside low physical activity']
         self.unit = 'CHF'
 
+    def calculate_impact(self, scenario, year, exposures, directory_hazard, nyears_hazards, uncertainty_variable='all'):
+
+        hazard = call_hazard_productivity(directory_hazard, scenario, year, nyears_hazards=nyears_hazards, uncertainty_variable=uncertainty_variable)
+
+        if uncertainty_variable == 'impactfunction' or uncertainty_variable == 'all':
+            TF = True
+        else:
+            TF = False
+
+        if_hw_set = call_impact_functions_productivity(TF)
+        impact = Impact()
+        impact.calc(exposures, if_hw_set, hazard, save_mat=True)
+
+        return csr_matrix(impact.imp_mat.sum(axis=0))
+
     def costs_in_millions(self):
         self.agg_impacts_mc = {scenario: {year: {category: (self.agg_impacts_mc[scenario][year][category]) / 1000000
                                                  for category in self.categories} for year in self.years} for scenario
@@ -190,18 +197,18 @@ class ImpactsHeatMortality(ImpactsHeat):
         self.unit = 'Annual Heat Related Death (#)'
         self.categories = ['Under 75', 'Over 75']
 
-    def calculate_impact(self, scenario, year, exposures, directory_hazard, nyears_hazards, crs_exposures=4326):
+    def calculate_impact(self, scenario, year, exposures, directory_hazard, nyears_hazards, uncertainty_variable='all'):
         exposures = Exposures(exposures)
         exposures.check()
-        hazard = call_hazard(directory_hazard, scenario, year, nyears_hazards)
-        if_hw_set = call_impact_functions()
-        impact = ImpactHeatMortality(exposures)
+        hazard = call_hazard_mortality(directory_hazard, scenario, year, nyears_hazards)
+        if_hw_set = call_impact_functions_mortality()
+        impact = ImpactHeatMortality()
         impact.calc(exposures, if_hw_set, hazard, save_mat=True)
         return csr_matrix(impact.imp_mat.sum(axis=0))
 
 
 class ImpactHeatMortality(Impact):
-    def __init__(self,exposures):
+    def __init__(self):
         super().__init__()
         self._exp_impact = self._exp_impact_mortality
 
@@ -232,45 +239,23 @@ class ImpactHeatMortality(Impact):
         # get affected fractions
         # get exposure values
         exposure_values = exposures.value.values[exp_iimp]
-        daily_deaths = exposures.daily_deaths.values[exp_iimp]*exposure_values
+        daily_deaths = exposures.daily_deaths.values[exp_iimp]
 
-        max_temp = temperature_matrix.max()
-        expected_deaths = np.mean([daily_deaths / imp_fun.calc_mdr(t)
-                           for t in range(22, int(np.ceil(max_temp)) + 1)], axis=0)
+        daily_deaths_corrected = np.mean([daily_deaths / imp_fun.calc_mdr(t)
+                           for t in range(22, 38)], axis=0)
         #average_death = np.sum(np.multiply(exposure_values, expected_deaths[t]) for t in range(len(expected_deaths)))
         # Compute impact matrix
-        self.imp_mat[0, exp_iimp] = self._impact_mortality(temperature_matrix, exposure_values, expected_deaths,
+        self.imp_mat[0, exp_iimp] = self._impact_mortality(temperature_matrix, exposure_values, daily_deaths_corrected,
                                                            imp_fun)
 
     @staticmethod
-    def _impact_mortality(temperature_matrix, exposure_values, average_death, imp_fun):
-        temperature_array = temperature_matrix.astype(int).toarray()
+    def _impact_mortality(temperature_matrix, exposure_values, daily_deaths_corrected, imp_fun):
+        temperature_array = temperature_matrix.toarray().astype(int)
         temperatures = np.unique(temperature_array)
         temperatures = temperatures[temperatures > 21]
         occurence = np.apply_along_axis(np.bincount, axis=0, arr=temperature_array,
                                         minlength=np.max(temperature_array) + 1)
         occurence = {t: occurence[t] for t in range(22, len(occurence))}
         af = {t: np.divide(imp_fun.calc_mdr(t) - 1, imp_fun.calc_mdr(t)) for t in temperatures}
-        return np.sum(af[t] * occurence[t] * average_death for t in temperatures)
-
-
-def death_impact_test(pop, pop_tot, daily_deaths, t=25, occurence=10):
-    results = np.zeros(len(pop_tot))
-    af_all = np.zeros(len(pop_tot))
-    average_death_all = np.zeros([len(pop_tot)])
-
-    for n in range(len(pop_tot)):
-        imp_fun_set = call_impact_functions()
-        imp_fun = imp_fun_set.get_func('heat')[0]
-        exposure_values = pop/pop_tot[n]
-        max_temp = 35
-        expected_deaths = [daily_deaths[n] / imp_fun.calc_mdr(value)
-                           for value in range(22, int(np.ceil(max_temp)) + 1)]
-        average_death = np.sum(np.multiply(exposure_values, expected_deaths[t]) for t in range(len(expected_deaths)))
-        average_death_all[n] = average_death
-        value = np.multiply(exposure_values, imp_fun.calc_mdr(t) - 1)
-        af = np.divide(value, value + 1)
-        af_all[n] = af
-        results[n] = af * occurence * average_death
-    return results, af_all, average_death_all
+        return np.sum(af[t] * occurence[t] * daily_deaths_corrected*exposure_values for t in temperatures)
 

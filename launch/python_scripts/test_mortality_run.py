@@ -16,7 +16,7 @@ directory_hazard = '../../input_data/ch2018_sample/'  # test data
 n_mc = 4
 years = [2020]
 scenarios = ['RCP85']
-nyears_hazards = 10
+nyears_hazards = 6
 
 directory_if = '../../input_data/impact_functions/'
 annual_deaths_file = ''.join([directory_if, 'annual_deaths.xlsx'])

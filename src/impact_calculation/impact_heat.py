@@ -23,32 +23,32 @@ class ImpactsHeat:
         self.median_impact_matrices = dict()
         self.unit = ''
 
-    def parallel_impact_calculation(self, scenario, year, exposure, directory_hazard, nyears_hazards, save_median_mat,
+    def parallel_impact_calculation(self, scenario, year, exposures, directory_hazard, nyears_hazards, save_median_mat,
                                     uncertainty_variable='all'):
         ncores_max = cpu_count()
         impacts = Parallel(n_jobs=ncores_max)(delayed(self.calculate_impact)
-                                              (scenario, year, exposure, directory_hazard, nyears_hazards,
+                                              (scenario, year, exposures, directory_hazard, nyears_hazards,
                                                uncertainty_variable) for i in range(0, self.n_mc))
 
-        agg_impacts_mc = [np.sum(impacts[n]) for n in range(self.n_mc)]
+        agg_impacts_mc = {exposure: [np.sum(impacts[n][exposure]) for n in range(self.n_mc)] for exposure in exposures}
         if save_median_mat:
-            median_impact_matrices = csr_matrix(np.median(vstack(impacts[n]
-                                                                 for n in range(self.n_mc)).todense(), axis=0))
+            median_impact_matrices = {exposure: csr_matrix(np.median(vstack(impacts[n][exposure]
+                                                                 for n in range(self.n_mc)).todense(), axis=0)) for exposure in exposures}
             return [agg_impacts_mc, median_impact_matrices]
 
         return [agg_impacts_mc]
 
     def impacts_years_scenarios(self, exposures, directory_hazard, nyears_hazards, save_median_mat=True, uncertainty_variable='all'):
 
-        impacts = {scenario: {year: {category: self.parallel_impact_calculation(scenario, year,
-                                     exposures[category], directory_hazard, nyears_hazards, save_median_mat, uncertainty_variable)
-                                     for category in exposures} for year in self.years} for scenario in self.scenarios}
-        self.agg_impacts_mc = {scenario: {year: {category: impacts[scenario][year][category][0]
-                                                 for category in exposures} for year in self.years} for scenario in
+        impacts = {scenario: {year: self.parallel_impact_calculation(scenario, year,
+                                     exposures, directory_hazard, nyears_hazards, save_median_mat, uncertainty_variable)
+                                     for year in self.years} for scenario in self.scenarios}
+        self.agg_impacts_mc = {scenario: {year: impacts[scenario][year][0]
+                                                 for year in self.years} for scenario in
                                self.scenarios}
         if save_median_mat:
-            self.median_impact_matrices = {scenario: {year: {category: impacts[scenario][year][category][1]
-                                                             for category in exposures} for year in self.years} for
+            self.median_impact_matrices = {scenario: {year: impacts[scenario][year][1]
+                                                             for year in self.years} for
                                            scenario in
                                            self.scenarios}
 
@@ -164,9 +164,9 @@ class ImpactsHeatProductivity(ImpactsHeat):
                            'inside moderate physical activity', 'inside low physical activity']
         self.unit = 'CHF'
 
-    def calculate_impact(self, scenario, year, exposures, directory_hazard, nyears_hazards, uncertainty_variable='all'):
+    def calculate_impact(self, scenario, year, exposures, directory_hazard, nyears_hazard, uncertainty_variable='all'):
 
-        hazard = call_hazard_productivity(directory_hazard, scenario, year, nyears_hazards=nyears_hazards, uncertainty_variable=uncertainty_variable)
+        hazards = call_hazard_productivity(directory_hazard, scenario, year, nyears_hazard=nyears_hazard, uncertainty_variable=uncertainty_variable)
 
         if uncertainty_variable == 'impactfunction' or uncertainty_variable == 'all':
             TF = True
@@ -174,10 +174,17 @@ class ImpactsHeatProductivity(ImpactsHeat):
             TF = False
 
         if_hw_set = call_impact_functions_productivity(TF)
-        impact = Impact()
-        impact.calc(exposures, if_hw_set, hazard, save_mat=True)
+        imp_mat = {}
+        for exposure in exposures:
+            if 'inside' in exposure:
+                hazard = hazards['heat inside']
+            else:
+                hazard = hazards['heat outside']
+            impact = Impact()
+            impact.calc(exposures[exposure], if_hw_set, hazard, save_mat=True)
+            imp_mat[exposure] = csr_matrix(impact.imp_mat)
 
-        return csr_matrix(impact.imp_mat.sum(axis=0))
+        return imp_mat
 
     def costs_in_millions(self):
         self.agg_impacts_mc = {scenario: {year: {category: (self.agg_impacts_mc[scenario][year][category]) / 1000000
@@ -198,13 +205,15 @@ class ImpactsHeatMortality(ImpactsHeat):
         self.categories = ['Under 75', 'Over 75']
 
     def calculate_impact(self, scenario, year, exposures, directory_hazard, nyears_hazards, uncertainty_variable='all'):
-        exposures = Exposures(exposures)
-        exposures.check()
+
         hazard = call_hazard_mortality(directory_hazard, scenario, year, nyears_hazards)
         if_hw_set = call_impact_functions_mortality()
-        impact = ImpactHeatMortality()
-        impact.calc(exposures, if_hw_set, hazard, save_mat=True)
-        return csr_matrix(impact.imp_mat.sum(axis=0))
+        imp_mat = {}
+        for exposure in exposures:
+            impact = ImpactHeatMortality()
+            impact.calc(exposures[exposure], if_hw_set, hazard, save_mat=True)
+            imp_mat[exposure] = csr_matrix(impact.imp_mat.sum(axis=0))
+        return imp_mat
 
 
 class ImpactHeatMortality(Impact):

@@ -2,6 +2,9 @@ import sys
 import pandas as pd
 from climada.entity import Exposures
 import time
+
+from src.write_entities.define_hazard import call_hazard_productivity
+
 sys.path.append('../../')
 from src.impact_calculation.impact_heat import ImpactsHeatMortality, ImpactsHeatProductivity
 from src.write_entities.define_exposures import call_exposures_switzerland_mortality, \

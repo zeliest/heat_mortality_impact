@@ -80,7 +80,7 @@ def call_hazard_mortality(directory_hazard, scenario, year, nyears_hazards):
     return heat  # return the hazards
 
 
-def call_hazard_productivity(directory_hazard, scenario, year, nyears_hazards, uncertainty_variable='all', sun_protection=False,
+def call_hazard_productivity(directory_hazard, scenario, year, nyears_hazard=6, uncertainty_variable='all', sun_protection=False,
                 working_hours=[8, 12, 13, 17], only_outside=False):
     """Compute heat inside and heat outside hazards for the ch2018 data, considered as any hour where the WBGT is higher
         than 22 degrees celsius
@@ -117,7 +117,7 @@ def call_hazard_productivity(directory_hazard, scenario, year, nyears_hazards, u
     error_wbgt = np.random.normal(0, 2 / 3.92)  # error for the transformation between T and WBGT
 
     if uncertainty_variable == 'all' or uncertainty_variable == 'years':
-        ny = random.randint(-nyears_hazards/2, nyears_hazards/2)  # to be added to the year, so that any year in the +5 to -5 range can be picked
+        ny = random.randint(-nyears_hazard/2, nyears_hazard/2)  # to be added to the year, so that any year in the +5 to -5 range can be picked
     else:  # if we are testing the sensitivity to the change in variables, we always want to be taking
         # the same year and therefore add 0
         ny = 0
@@ -245,65 +245,65 @@ def call_hazard_productivity(directory_hazard, scenario, year, nyears_hazards, u
                     else:  # without uncertainty
                         wbgt_in[t, :, :] = (np.random.normal(t_to_wbgt(temp_in[t, :, :]), sd_mean))
 
-        h = h + 1  # add +1 to the hour
-        if h == day_end + 1:  # if this is the end of the day add 1 to day and go back to hour=1
-            h = day_start + 1  # go back to the hour where the day starts
-            day = day + 1
-            week_day = week_day + 1
-            if week_day == 8:  # if it is the end of the week, go back to the start
-                week_day = 0
+            h = h + 1  # add +1 to the hour
+            if h == day_end + 1:  # if this is the end of the day add 1 to day and go back to hour=1
+                h = day_start + 1  # go back to the hour where the day starts
+                day = day + 1
+                week_day = week_day + 1
+                if week_day == 8:  # if it is the end of the week, go back to the start
+                    week_day = 0
 
-    # again, we get rid this time of the hours where the wbgt is lower than 22 everywhere:
-    hours_in = np.zeros(len(wbgt_in), dtype=bool)
-    hours_out = np.zeros(len(wbgt_out), dtype=bool)
+        # again, we get rid this time of the hours where the wbgt is lower than 22 everywhere:
+        hours_in = np.zeros(len(wbgt_in), dtype=bool)
+        hours_out = np.zeros(len(wbgt_out), dtype=bool)
 
-    for i_ in range(len(wbgt_in)):
-        hours_out[i_] = np.any(wbgt_out[i_, :, :] > 22)
-        hours_in[i_] = np.any(wbgt_in[i_, :, :] > 22)
+        for i_ in range(len(wbgt_in)):
+            hours_out[i_] = np.any(wbgt_out[i_, :, :] > 22)
+            hours_in[i_] = np.any(wbgt_in[i_, :, :] > 22)
 
-    hours_in[0] = True
-    hours_out[0] = True  # I here set the first hour as being a hazard, whatever the real wbgt. this is because it
-    # happens maybe once in a 1000 times that there are 0 hazards inside, which further leads to an error and to the
-    # model to fail
+        hours_in[0] = True
+        hours_out[0] = True  # I here set the first hour as being a hazard, whatever the real wbgt. this is because it
+        # happens maybe once in a 1000 times that there are 0 hazards inside, which further leads to an error and to the
+        # model to fail
 
-    wbgt_out = wbgt_out[hours_out == True]
-    wbgt_in = wbgt_in[hours_in == True]
-    dates_out = dates[hours_out == True].astype('int')
-    dates_in = dates[hours_in == True].astype('int')
+        wbgt_out = wbgt_out[hours_out == True]
+        wbgt_in = wbgt_in[hours_in == True]
+        dates_out = dates[hours_out == True].astype('int')
+        dates_in = dates[hours_in == True].astype('int')
 
-    nevents = [len(wbgt_out), len(wbgt_in)]  # number of events inside and outside
-    events = [range(len(wbgt_out)), range(len(wbgt_in))]  # number of each event
-    event_dates = [dates_out, dates_in]
-    wbgt_data = [wbgt_out, wbgt_in]
-    hazard_types = ['heat outside', 'heat inside']
+        nevents = [len(wbgt_out), len(wbgt_in)]  # number of events inside and outside
+        events = [range(len(wbgt_out)), range(len(wbgt_in))]  # number of each event
+        event_dates = [dates_out, dates_in]
+        wbgt_data = [wbgt_out, wbgt_in]
+        hazard_types = ['heat outside', 'heat inside']
 
-    hazards = {}
+        hazards = {}
 
-    for w_ in range(len(wbgt_data)):  # write down the events in Hazard class
+        for w_ in range(len(wbgt_data)):  # write down the events in Hazard class
 
-        grid_x, grid_y = np.meshgrid(tasmax.lon.values, tasmax.lat.values)
-        heat = Hazard('heat')
-        heat.centroids.set_lat_lon(grid_y.flatten(), grid_x.flatten(), crs={'init': 'epsg:4326'})
-        heat.units = 'degrees c'
-        heat_data = wbgt_data[w_]
-        heat_data[np.isnan(heat_data)] = 0.  # replace NAs by 0
-        heat.intensity = sparse.csr_matrix(heat_data.reshape(nevents[w_], nlons * nlats))
-        heat.event_id = np.array(events[w_])
-        heat.event_name = heat.event_id
-        heat.frequency = np.ones(nevents[w_])
-        heat.fraction = heat.intensity.copy()
-        heat.fraction.data.fill(1)
-        heat.date = event_dates[w_]
-        hazards[hazard_types[w_]] = heat
-        heat.check()
+            grid_x, grid_y = np.meshgrid(tasmax.lon.values, tasmax.lat.values)
+            heat = Hazard('heat')
+            heat.centroids.set_lat_lon(grid_y.flatten(), grid_x.flatten(), crs={'init': 'epsg:4326'})
+            heat.units = 'degrees c'
+            heat_data = wbgt_data[w_]
+            heat_data[np.isnan(heat_data)] = 0.  # replace NAs by 0
+            heat.intensity = sparse.csr_matrix(heat_data.reshape(nevents[w_], nlons * nlats))
+            heat.event_id = np.array(events[w_])
+            heat.event_name = heat.event_id
+            heat.frequency = np.ones(nevents[w_])
+            heat.fraction = heat.intensity.copy()
+            heat.fraction.data.fill(1)
+            heat.date = event_dates[w_]
+            hazards[hazard_types[w_]] = heat
+            heat.check()
 
-    tasmax.close()
-    tasmin.close()
-    del tasmax
-    del tasmin
-    del wbgt_in
-    del wbgt_out
-    del temp_in
-    del temp
+        tasmax.close()
+        tasmin.close()
+        del tasmax
+        del tasmin
+        del wbgt_in
+        del wbgt_out
+        del temp_in
+        del temp
 
-    return hazards  # return the hazards
+        return hazards  # return the hazards

@@ -14,7 +14,7 @@ directory_output = '../../output/mortality_results/'  # where to save to output
 #directory_hazard = '/Users/zeliestalhanske/Desktop/Master/Thesis/Hazard/ch20182/'  # test data
 directory_hazard = '../../input_data/ch2018_sample/'  # test data
 n_mc = 4
-years = [2020]
+years = [2050]
 scenarios = ['RCP85']
 nyears_hazards = 6
 

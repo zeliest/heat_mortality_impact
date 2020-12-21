@@ -99,7 +99,7 @@ def add_shape_coord_from_data_array(xr_da, shp_path, region):
 
 
 def vector_shapefile_mask(vector, shp_dir, region, epsg_input, epsg_output): # this is used for the exposures, but is
-    # quite slow (not a big problem in the monte carlo as the exposures are called only once)
+    # quite slow (not a big problem as this is called once for the exposures and saved)
     regions = gpd.read_file(shp_dir)
     crs = {'init': 'epsg:' + str(epsg_input)}
     geometry = [Point(xy) for xy in zip(vector.longitude, vector.latitude)]

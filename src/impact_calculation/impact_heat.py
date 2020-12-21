@@ -58,8 +58,8 @@ class ImpactsHeat:
         impacts_dict = {scenario: {year: {category: self.matrix_as_impact
         (self.median_impact_matrices[scenario][year][category],
          exposures[category], unit=unit, percentage=percentage, canton=canton)
-                                          for category in exposures} for year in self.years} for scenario in
-                        self.scenarios}
+                                          for category in exposures} for year in self.median_impact_matrices[scenario]} for scenario in
+                        self.median_impact_matrices}
         return impacts_dict
 
     @staticmethod
@@ -121,7 +121,7 @@ class ImpactsHeat:
         else:
             impact.imp_mat = impact_matrix
         if percentage:
-            impact.imp_mat = csr_matrix((impact_matrix.toarray()[0, :]
+            impact.imp_mat = csr_matrix((impact.imp_mat.toarray()[0, :]
                                          / exposures.value.replace(0,
                                                                    1)) * 100)  # put impacts in terms of percentage of exposure
         impact.unit = unit
@@ -134,11 +134,11 @@ class ImpactsHeat:
                       self.scenarios}
         return agg_impact
 
-    def get_relative_change_matrices(self, reference_year, categories):
+    def get_relative_change_matrices(self, reference_year, reference_scenario, categories):
         relative_median_impact_matrices = {scenario: {year: {category: self.compute_relative_change(
             self.median_impact_matrices[scenario][year][category],
-            self.median_impact_matrices[scenario][reference_year][category])
-            for category in categories} for year in self.years} for scenario in self.scenarios}
+            self.median_impact_matrices[reference_scenario][reference_year][category])
+            for category in categories} for year in self.median_impact_matrices[scenario]} for scenario in self.median_impact_matrices}
         return relative_median_impact_matrices
 
     def append_years(self, impacts):
@@ -188,13 +188,13 @@ class ImpactsHeatProductivity(ImpactsHeat):
 
     def costs_in_millions(self):
         self.agg_impacts_mc = {scenario: {year: {category: (self.agg_impacts_mc[scenario][year][category]) / 1000000
-                                                 for category in self.categories} for year in self.years} for scenario
-                               in self.scenarios}
+                                                 for category in self.categories} for year in self.agg_impacts_mc[scenario]} for scenario
+                               in self.agg_impacts_mc}
         if len(self.median_impact_matrices):
             self.median_impact_matrices = \
                 {scenario: {year: {category: (self.median_impact_matrices[scenario][year][category]) / 1000000
-                                   for category in self.categories} for year in self.years} for scenario
-                 in self.scenarios}
+                                   for category in self.categories} for year in self.agg_impacts_mc[scenario]} for scenario
+                 in self.agg_impacts_mc}
         self.units = 'Millions of CHF'
 
 
@@ -252,8 +252,7 @@ class ImpactHeatMortality(Impact):
 
         daily_deaths_corrected = np.mean([daily_deaths / imp_fun.calc_mdr(t)
                            for t in range(22, 38)], axis=0)
-        #average_death = np.sum(np.multiply(exposure_values, expected_deaths[t]) for t in range(len(expected_deaths)))
-        # Compute impact matrix
+
         self.imp_mat[0, exp_iimp] = self._impact_mortality(temperature_matrix, exposure_values, daily_deaths_corrected,
                                                            imp_fun)
 

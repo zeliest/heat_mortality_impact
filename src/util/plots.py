@@ -24,32 +24,34 @@ def plot_impacts_heat(agg_impacts_mc, unit, impact_type, uncertainty=True, color
     minimums = {}
     maximums = {}
 
+
+    for s_ in agg_impacts_mc:
+        median[rcps[s_]] = pd.DataFrame()  # dataframe containing the median realization for the different exposures
+        maximums[rcps[
+            s_]] = pd.DataFrame()  # dataframe containing the 95th percentile realization for the different exposures
+        minimums[rcps[
+            s_]] = pd.DataFrame()  # dataframe containing the 5th percentile realization for the different exposures
+
+        for y_ in sorted(list(agg_impacts_mc[s_])):
+            median[rcps[s_]][str(y_)] = ((agg_impacts_mc[s_][y_]).median())*ratio  # don't need the total here
+            maximums[rcps[s_]][str(y_)] = ((agg_impacts_mc[s_][y_]).quantile(0.95))*ratio
+            minimums[rcps[s_]][str(y_)] = ((agg_impacts_mc[s_][y_]).quantile(0.05))*ratio
+
+        median[rcps[s_]] = median[rcps[s_]].transpose()
+        maximums[rcps[s_]] = maximums[rcps[s_]].transpose()
+        minimums[rcps[s_]] = minimums[rcps[s_]].transpose()
+
+    fig1, ax1 = plot_clustered_stacked(median, unit, color=color, error_bars=False,
+                                       plot_legend=False, labels_cat=labels_cat)
+    if save:
+        plt.savefig(''.join(['../figures/', impact_type, '_bar_2020_2080.pdf']), bbox_inches='tight')
     if uncertainty:
-        for s_ in agg_impacts_mc:
-            median[rcps[s_]] = pd.DataFrame()  # dataframe containing the median realization for the different exposures
-            maximums[rcps[
-                s_]] = pd.DataFrame()  # dataframe containing the 95th percentile realization for the different exposures
-            minimums[rcps[
-                s_]] = pd.DataFrame()  # dataframe containing the 5th percentile realization for the different exposures
-
-            for y_ in sorted(list(agg_impacts_mc[s_])):
-                median[rcps[s_]][str(y_)] = ((agg_impacts_mc[s_][y_]).median())*ratio  # don't need the total here
-                maximums[rcps[s_]][str(y_)] = ((agg_impacts_mc[s_][y_]).quantile(0.95))*ratio
-                minimums[rcps[s_]][str(y_)] = ((agg_impacts_mc[s_][y_]).quantile(0.05))*ratio
-
-            median[rcps[s_]] = median[rcps[s_]].transpose()
-            maximums[rcps[s_]] = maximums[rcps[s_]].transpose()
-            minimums[rcps[s_]] = minimums[rcps[s_]].transpose()
+        fig2, ax2 = plot_clustered_stacked(median, unit, minimums=minimums, maximums=maximums, color=color, labels_cat=labels_cat)
+    if save:
+        plt.savefig(''.join(['../figures/', impact_type, '_bar_err_2020_2080.pdf']), bbox_inches='tight')
 
 
-        if save:
-            fig1, ax1 = plot_clustered_stacked(median, minimums, maximums, unit, color=color, error_bars=False, plot_legend=False, labels_cat= labels_cat)
-            plt.savefig(''.join(['../figures/', impact_type, '_bar_2020_2080.pdf']), bbox_inches='tight')
-            fig2, ax2 = plot_clustered_stacked(median, minimums, maximums, unit, color=color, labels_cat=labels_cat)
-            plt.savefig(''.join(['../figures/', impact_type, '_bar_err_2020_2080.pdf']), bbox_inches='tight')
-
-
-def plot_clustered_stacked(medians, minimums, maximums, unit, color=None, ref_year='2020', error_bars=True,
+def plot_clustered_stacked(medians, unit, minimums=None, maximums=None, color=None, ref_year='2020', error_bars=True,
                            plot_legend=True, labels_cat=None):
     """Given a dict of dataframes, with identical columns and index, create a clustered stacked bar plot.
 labels is a list of the names of the dataframe, used for the legend
@@ -78,32 +80,47 @@ partly copied from: https://stackoverflow.com/questions/22787209/how-to-have-clu
         labels = medians[scenario].index
         for p, column in enumerate(medians[scenario]):
             if p == 0:
+                bottom = None
                 bottom0 = None
                 bottom1 = None
             else:
                 bottom = sum(medians[scenario].iloc[:, b] for b in range(0, p))
                 bottom0 = bottom[0]
                 bottom1 = bottom[1:]
-            if p == len(medians[scenario].columns) - 1:
-                err = np.array([medians[scenario].sum(axis=1).values - minimums[scenario].sum(axis=1).values,
-                                maximums[scenario].sum(axis=1).values - medians[scenario].sum(axis=1).values])
-                err0 = [[err[0, 0]], [err[1, 0]]]
-                err1 = err[:, 1:]
-            if p != (len(medians[scenario].columns) - 1) or error_bars == False:
+            if error_bars:
+                if p == (len(medians[scenario].columns) - 1):
+                    err = np.array([medians[scenario].sum(axis=1).values - minimums[scenario].sum(axis=1).values,
+                                    maximums[scenario].sum(axis=1).values - medians[scenario].sum(axis=1).values])
+                    err0 = [[err[0, 0]], [err[1, 0]]]
+                    err1 = err[:, 1:]
+            if p != (len(medians[scenario].columns) - 1):
+                err = None
+                err0 = None
+                err1 = None
+            if error_bars == False:
+                err = None
                 err0 = None
                 err1 = None
             position = index + scenario_num * b_width
+
             if scenario == 'RCP8.5':
                 bars1 = ax.bar(b_width, medians[scenario].iloc[0, p],
+                            width=b_width, hatch=H,
+                                bottom=bottom0,
+                                color=color[p], edgecolor='white', label=ref_year, yerr=err0,
+                                error_kw=dict(barsabove=True, elinewidth=1, capsize=3, ecolor='gray'))
+                bars2 = ax.bar(position[1:], medians[scenario].iloc[1:, p], data=medians[scenario].iloc[1:, p],
                                width=b_width, hatch=H,
-                               bottom=bottom0,
-                               color=color[p], edgecolor='white', label=ref_year, yerr=err0,
+                               bottom=bottom1,
+                               color=color[p], edgecolor='white', label=labels_cat[p], yerr=err1,
                                error_kw=dict(barsabove=True, elinewidth=1, capsize=3, ecolor='gray'))
-            bars2 = ax.bar(position[1:], medians[scenario].iloc[1:, p], data=medians[scenario].iloc[1:, p],
-                           width=b_width, hatch=H,
-                           bottom=bottom1,
-                           color=color[p], edgecolor='white', label=labels_cat[p], yerr=err1,
-                           error_kw=dict(barsabove=True, elinewidth=1, capsize=3, ecolor='gray'))
+            else:
+                bars2 = ax.bar(position[:]+1, medians[scenario].iloc[:, p], data=medians[scenario].iloc[:, p],
+                               width=b_width, hatch=H,
+                               bottom=bottom,
+                               color=color[p], edgecolor='white', label=labels_cat[p], yerr=err,
+                               error_kw=dict(barsabove=True, elinewidth=1, capsize=3, ecolor='gray'))
+
 
         ax.set_ylabel(unit)
 
@@ -118,5 +135,5 @@ partly copied from: https://stackoverflow.com/questions/22787209/how-to-have-clu
                 l2 = ax.add_artist(l1)
 
         medians[scenario].columns = labels_cat
-    ax.set(xlim=[-0.3, np.max(position)+0.3])
+    ax.set(xlim=[-0.3, np.max(position) + 0.3])
     return fig, ax

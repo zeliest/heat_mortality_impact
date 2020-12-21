@@ -18,10 +18,10 @@ directory_hazard = sys.argv[1]  # first input from the bash script, which is the
 
 n_mc = literal_eval(sys.argv[2])  # number of Monte Carlo runs
 
-# get third input, the years for which to compute the impact
+# get third input, the years for which to compute the impact:
 years = [int(i) for i in convert(sys.argv[3])]
 nyears_hazards = 6
-# get fifth input, the scenarios for which to compute the impact
+# get fifth input, the scenarios for which to compute the impact:
 scenarios = convert(sys.argv[4])
 
 # determine if the median damage matrix should be saved as output

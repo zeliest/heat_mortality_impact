@@ -1,15 +1,16 @@
 #!/bin/sh
- 
+
 years='2020,2035,2050'
 scenario='RCP26,RCP45,RCP85'
 save_matrix=0
-n_mc=100
+n_mc='100'
+sensibility=0
 
-while getopts "d::f::c:::y::s::m::" opt; do
+while getopts "d::f::c::y::s::m::u::" opt; do
 
   case $opt in
 
-    d) directory_climada="$OPTARG" 
+    d) directory_climada="$OPTARG"
     ;;
     f) directory_ch2018="$OPTARG"
     ;;
@@ -21,6 +22,9 @@ while getopts "d::f::c:::y::s::m::" opt; do
     ;;
     m) save_matrix="$OPTARG"
     ;;
+    s) sensibility="$OPTARG"
+    ;;
+
 
   esac
 
@@ -36,14 +40,8 @@ source activate climada_env
 cd $path_model
 
 
-python3 ${path_model}/../python_scripts/model_run_mortality.py $directory_ch2018 $n_mc $years $scenario $save_matrix
+python3 ${path_model}/../python_scripts/model_run_productivity.py $directory_ch2018 $n_mc $years $scenario $save_matrix $sensibility
 
 #conda deactivate
 
-echo 'script completed' 
-
-
-
-
-
-
+echo 'script completed'

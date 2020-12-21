@@ -34,7 +34,7 @@ def sample_impact_functions_mortality(file):
     data = file[['T', 'best_estimate', '95CI_low', '95CI_high']]  # get best estimated from the csv files
     xdata = data['T']
 
-    ydata = np.clip(np.random.normal(loc=data['best_estimate'], scale=1), data['95CI_low'], data['95CI_high'])
+    ydata = np.clip(np.random.normal(loc=data['best_estimate'], scale=1), data['95CI_low']*0.9, data['95CI_high']*1.1)
 
     # set RR=1 up to T=22°C:
     ydata = np.append(ydata, [1, 1])
